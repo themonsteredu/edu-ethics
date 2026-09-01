@@ -1,23 +1,24 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Brand } from "../components/Brand";
-import { createClientId } from "../lib/session";
+import { createClientId, normalizeRoomCodeInput } from "../lib/session";
 import { loadStudentProfile, saveStudentProfile } from "../lib/storage";
 
 export function JoinPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const saved = loadStudentProfile();
-  const [roomCode, setRoomCode] = useState(saved?.roomCode ?? "");
+  const [roomCode, setRoomCode] = useState(() => normalizeRoomCodeInput(searchParams.get("room") ?? ""));
   const [nickname, setNickname] = useState(saved?.nickname ?? "");
   const [error, setError] = useState("");
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const normalizedCode = roomCode.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    const normalizedCode = normalizeRoomCodeInput(roomCode);
     const cleanNickname = nickname.trim().slice(0, 10);
 
-    if (normalizedCode.length < 6) {
-      setError("교사 화면의 6자리 수업코드를 확인해 주세요.");
+    if (normalizedCode.length !== 6) {
+      setError("교사 화면의 수업코드 6자리를 정확히 입력해 주세요.");
       return;
     }
     if (cleanNickname.length < 2) {
@@ -49,10 +50,13 @@ export function JoinPage() {
               <input
                 className="room-code-input"
                 value={roomCode}
-                onChange={(event) => setRoomCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                onChange={(event) => {
+                  setRoomCode(normalizeRoomCodeInput(event.target.value));
+                  setError("");
+                }}
                 inputMode="text"
                 autoComplete="off"
-                maxLength={8}
+                maxLength={200}
                 placeholder="A2B4C6"
                 autoFocus
               />

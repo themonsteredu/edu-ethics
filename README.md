@@ -20,7 +20,8 @@
 - 선택 이유 상위 3개 실시간 집계
 - 동의·정직·공정·개인정보·책임 윤리 열쇠 5개
 - Supabase Realtime Broadcast/Presence
-- Supabase 연결 실패 시 같은 브라우저의 여러 창으로 확인 가능한 교실 데모 모드
+- Supabase가 설정되지 않은 로컬 환경에서만 같은 브라우저 여러 창으로 확인 가능한 교실 데모 모드
+- 운영 Realtime 연결 실패 안내와 자동 재접속, 교사 수신 확인이 포함된 투표 전송
 - S-Core Dream 한글 폰트와 노트북·태블릿·모바일 반응형 UI
 
 투표 내용과 학생 이름은 데이터베이스 테이블에 저장하지 않습니다. Realtime 채널과 교사 브라우저 메모리에서 수업 중에만 집계하며, 교사 화면 새로고침 복구를 위해 해당 브라우저의 `localStorage`에 현재 수업 상태를 보관합니다.
@@ -48,7 +49,7 @@ VITE_TEACHER_PIN=3035
 | 경로 | 용도 |
 |---|---|
 | `/` | 3차시 수업 홈 |
-| `/join` | 학생 수업코드 입장 |
+| `/join?room=ABC234` | 학생 수업코드 자동 입력 및 입장 |
 | `/play?room=ABC234` | 학생 투표 화면 |
 | `/teacher` | 교사 진행 화면 |
 
@@ -60,4 +61,4 @@ npm run build
 npm run test:realtime
 ```
 
-`test:realtime`은 `.env.local`이 설정된 환경에서 두 Realtime 클라이언트의 채널 연결과 투표 Broadcast 수신을 확인합니다.
+`test:realtime`은 `.env.local`이 설정된 환경에서 두 Realtime 클라이언트의 Presence, 수업 상태 요청·응답, 투표 전달과 교사 수신 확인을 검증합니다.

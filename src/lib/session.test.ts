@@ -4,6 +4,7 @@ import {
   aggregateVotes,
   buildPublicSnapshot,
   createInitialSession,
+  normalizeRoomCodeInput,
   percentage,
   voteKey,
 } from "./session";
@@ -70,5 +71,15 @@ describe("lesson session helpers", () => {
   it("returns safe percentages for empty and populated groups", () => {
     expect(percentage(0, 0)).toBe(0);
     expect(percentage(1, 3)).toBe(33);
+  });
+
+  it("extracts an exact room code from direct and legacy copied links", () => {
+    expect(normalizeRoomCodeInput("https://edu-ethics.vercel.app/join?room=ABC234")).toBe("ABC234");
+    expect(normalizeRoomCodeInput("https://edu-ethics.vercel.app/join  수업코드: ZX9K32")).toBe("ZX9K32");
+    expect(normalizeRoomCodeInput("ab c-234")).toBe("ABC234");
+  });
+
+  it("keeps overlong plain input invalid instead of silently changing rooms", () => {
+    expect(normalizeRoomCodeInput("ABC2345")).toBe("ABC2345");
   });
 });

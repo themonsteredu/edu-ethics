@@ -52,6 +52,8 @@ export function TeacherRoomPage() {
   const [transport, setTransport] = useState<TransportKind>(
     hasSupabaseConfig() ? "supabase" : "classroom-demo",
   );
+  const [connectionIssue, setConnectionIssue] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
   const [copied, setCopied] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
@@ -71,7 +73,7 @@ export function TeacherRoomPage() {
 
   const round = lesson1Rounds[session.roundIndex] ?? lesson1Rounds[0];
   const phase = round.phases[session.phaseIndex] ?? round.phases[0];
-  const joinUrl = `${window.location.origin}/join`;
+  const joinUrl = `${window.location.origin}/join?room=${session.roomCode}`;
 
   useEffect(() => {
     sessionRef.current = session;
@@ -91,6 +93,9 @@ export function TeacherRoomPage() {
           senderId: teacherId,
           sentAt: Date.now(),
           snapshot: current,
+        }).catch(() => {
+          setConnectionIssue("학생 화면과 다시 연결하고 있습니다.");
+          setRetryVersion((value) => value + 1);
         });
       }
       return;
@@ -102,8 +107,10 @@ export function TeacherRoomPage() {
     const currentPhase = currentRound?.phases[currentSession.phaseIndex];
     if (
       currentSession.status !== "voting" ||
+      event.senderId !== event.vote.studentId ||
       event.vote.roundId !== currentRound?.id ||
-      event.vote.phaseId !== currentPhase?.id
+      event.vote.phaseId !== currentPhase?.id ||
+      !currentPhase.suggestedReasonTags.some((reason) => reason.id === event.vote.reasonId)
     ) {
       return;
     }
@@ -114,22 +121,41 @@ export function TeacherRoomPage() {
       next.push(event.vote);
       return next;
     });
+
+    void connectionRef.current?.send({
+      kind: "vote-accepted",
+      senderId: teacherId,
+      sentAt: Date.now(),
+      studentId: event.vote.studentId,
+      receiptId: event.receiptId,
+    }).catch(() => {
+      setConnectionIssue("학생 화면과 다시 연결하고 있습니다.");
+      setRetryVersion((value) => value + 1);
+    });
   }, [teacherId]);
 
   useEffect(() => {
     let cancelled = false;
     let active: RoomConnection | null = null;
+    let retryTimer: number | null = null;
     const member: PresenceMember = {
       id: teacherId,
       role: "teacher",
       onlineAt: Date.now(),
     };
 
+    setConnectionIssue("");
+
     void connectRoom({
       roomCode: session.roomCode,
       member,
       onEvent: handleRoomEvent,
       onPresence: setMembers,
+      onDisconnect: () => {
+        if (cancelled) return;
+        setConnectionIssue("실시간 연결이 끊겨 다시 연결하고 있습니다.");
+        setRetryVersion((value) => value + 1);
+      },
     }).then((roomConnection) => {
       if (cancelled) {
         void roomConnection.disconnect();
@@ -139,27 +165,55 @@ export function TeacherRoomPage() {
       connectionRef.current = roomConnection;
       setConnection(roomConnection);
       setTransport(roomConnection.kind);
+      setConnectionIssue("");
+    }).catch(() => {
+      if (cancelled) return;
+      connectionRef.current = null;
+      setConnection(null);
+      setMembers([]);
+      setConnectionIssue("실시간 연결을 다시 시도하고 있습니다.");
+      retryTimer = window.setTimeout(() => setRetryVersion((value) => value + 1), 2500);
     });
 
     return () => {
       cancelled = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
       if (connectionRef.current === active) connectionRef.current = null;
       if (active) void active.disconnect();
       setConnection(null);
       setMembers([]);
     };
-  }, [session.roomCode, teacherId, handleRoomEvent]);
+  }, [session.roomCode, teacherId, handleRoomEvent, retryVersion]);
 
   useEffect(() => {
     snapshotRef.current = snapshot;
-    if (!connection) return;
-    void connection.send({
-      kind: "teacher-state",
-      senderId: teacherId,
-      sentAt: Date.now(),
-      snapshot,
+  }, [snapshot]);
+
+  useEffect(() => {
+    if (!connection || connection.roomCode !== session.roomCode) return;
+    const current = snapshotRef.current;
+    if (!current) return;
+
+    const teacherPresence: PresenceMember = {
+      id: teacherId,
+      role: "teacher",
+      onlineAt: Date.now(),
+      snapshot: current,
+    };
+
+    void Promise.all([
+      connection.updatePresence(teacherPresence),
+      connection.send({
+        kind: "teacher-state",
+        senderId: teacherId,
+        sentAt: Date.now(),
+        snapshot: current,
+      }),
+    ]).then(() => setConnectionIssue("")).catch(() => {
+      setConnectionIssue("학생 화면과 다시 연결하고 있습니다.");
+      setRetryVersion((value) => value + 1);
     });
-  }, [connection, snapshot, teacherId]);
+  }, [connection, session.roomCode, session.updatedAt, teacherId, transport]);
 
   const updateSession = (patch: Partial<TeacherSession>) => {
     setSession((current) => ({ ...current, ...patch, updatedAt: Date.now() }));
@@ -200,7 +254,7 @@ export function TeacherRoomPage() {
 
   const copyJoinInfo = async () => {
     try {
-      await navigator.clipboard.writeText(`${joinUrl}  수업코드: ${session.roomCode}`);
+      await navigator.clipboard.writeText(joinUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -284,9 +338,13 @@ export function TeacherRoomPage() {
             <strong>{session.roomCode}</strong>
             <small>{copied ? "복사됨" : "복사"}</small>
           </button>
-          <div className="connection-badge">
-            <i className={connection ? "is-online" : ""} />
-            {transport === "supabase" ? "실시간 연결" : "교실 데모"}
+          <div className={`connection-badge ${connectionIssue ? "is-error" : ""}`} title={connectionIssue || undefined}>
+            <i className={connection && !connectionIssue ? "is-online" : ""} />
+            {connectionIssue
+              ? "연결 재시도 중"
+              : connection
+              ? transport === "supabase" ? "실시간 연결" : "같은 기기 데모"
+              : "연결 중"}
           </div>
           <div className="student-count"><span>접속</span><strong>{connectedStudents}</strong>명</div>
           <Countdown endsAt={session.votingEndsAt} />
@@ -304,7 +362,7 @@ export function TeacherRoomPage() {
             <span>학생 입장</span>
             <strong>{joinUrl.replace(/^https?:\/\//, "")}</strong>
             <div className="lobby-room-code">{session.roomCode}</div>
-            <p>수업코드 입력 후 이름 또는 별명을 적습니다.</p>
+            <p>링크를 복사해 보내거나 수업코드 6자리를 입력합니다.</p>
             <div className="lobby-live-count"><i /> 현재 {connectedStudents}명 입장</div>
           </div>
         </section>

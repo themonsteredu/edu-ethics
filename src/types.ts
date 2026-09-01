@@ -91,7 +91,15 @@ export type RoomEvent =
       kind: "vote-submit";
       senderId: string;
       sentAt: number;
+      receiptId: string;
       vote: VoteSubmission;
+    }
+  | {
+      kind: "vote-accepted";
+      senderId: string;
+      sentAt: number;
+      studentId: string;
+      receiptId: string;
     };
 
 export interface PresenceMember {
@@ -99,4 +107,5 @@ export interface PresenceMember {
   role: "teacher" | "student";
   nickname?: string;
   onlineAt: number;
+  snapshot?: PublicSessionSnapshot;
 }

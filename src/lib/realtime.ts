@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import type { PresenceMember, RoomEvent } from "../types";
+import type { PresenceMember, PublicSessionSnapshot, RoomEvent, VoteSubmission } from "../types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
@@ -8,7 +8,9 @@ export type TransportKind = "supabase" | "classroom-demo";
 
 export interface RoomConnection {
   kind: TransportKind;
+  roomCode: string;
   send: (event: RoomEvent) => Promise<void>;
+  updatePresence: (member: PresenceMember) => Promise<void>;
   disconnect: () => Promise<void>;
 }
 
@@ -17,10 +19,87 @@ interface ConnectRoomOptions {
   member: PresenceMember;
   onEvent: (event: RoomEvent) => void;
   onPresence: (members: PresenceMember[]) => void;
+  onDisconnect?: () => void;
 }
 
 function normalizeCode(code: string): string {
   return code.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+}
+
+function ensureRealtimeResult(result: string, action: string): void {
+  if (result !== "ok") {
+    throw new Error(`${action} failed: ${result}`);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isVoteSubmission(value: unknown): value is VoteSubmission {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.studentId === "string" &&
+    typeof value.roundId === "string" &&
+    typeof value.phaseId === "string" &&
+    (value.choice === "green" || value.choice === "yellow" || value.choice === "red") &&
+    (value.reasonId === undefined || typeof value.reasonId === "string") &&
+    typeof value.submittedAt === "number"
+  );
+}
+
+function isPublicSnapshot(value: unknown): value is PublicSessionSnapshot {
+  if (!isRecord(value)) return false;
+  const statuses = new Set(["lobby", "briefing", "voting", "results", "discussion", "key", "complete"]);
+  const isCounts = (counts: unknown) => (
+    counts === null || (
+      isRecord(counts) &&
+      typeof counts.green === "number" &&
+      typeof counts.yellow === "number" &&
+      typeof counts.red === "number"
+    )
+  );
+  return (
+    typeof value.roomCode === "string" &&
+    statuses.has(String(value.status)) &&
+    Number.isInteger(value.introIndex) &&
+    Number.isInteger(value.roundIndex) &&
+    Number.isInteger(value.phaseIndex) &&
+    (value.votingEndsAt === null || typeof value.votingEndsAt === "number") &&
+    Array.isArray(value.unlockedKeyIds) &&
+    value.unlockedKeyIds.every((key) => typeof key === "string") &&
+    typeof value.updatedAt === "number" &&
+    Number.isInteger(value.connectedStudents) &&
+    Number.isInteger(value.responseCount) &&
+    isCounts(value.counts) &&
+    isCounts(value.previousCounts) &&
+    (value.reasonCounts === null || (
+      isRecord(value.reasonCounts) &&
+      Object.values(value.reasonCounts).every((count) => typeof count === "number")
+    )) &&
+    (value.transport === "supabase" || value.transport === "classroom-demo")
+  );
+}
+
+export function isRoomEvent(value: unknown): value is RoomEvent {
+  if (
+    !isRecord(value) ||
+    typeof value.kind !== "string" ||
+    typeof value.senderId !== "string" ||
+    typeof value.sentAt !== "number"
+  ) {
+    return false;
+  }
+
+  if (value.kind === "state-request") return true;
+  if (value.kind === "teacher-state") return isPublicSnapshot(value.snapshot);
+  if (value.kind === "vote-submit") {
+    return typeof value.receiptId === "string" && isVoteSubmission(value.vote);
+  }
+  if (value.kind === "vote-accepted") {
+    return typeof value.studentId === "string" && typeof value.receiptId === "string";
+  }
+  return false;
 }
 
 async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnection> {
@@ -37,9 +116,13 @@ async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnect
     },
   });
 
-  const roomName = `ethics-${normalizeCode(options.roomCode)}`;
+  const normalizedRoomCode = normalizeCode(options.roomCode);
+  const roomName = `ethics-${normalizedRoomCode}`;
+  let intentionallyClosed = false;
+  let subscribed = false;
   const channel: RealtimeChannel = supabase.channel(roomName, {
     config: {
+      private: false,
       broadcast: { ack: true, self: false },
       presence: { key: options.member.id },
     },
@@ -47,18 +130,24 @@ async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnect
 
   channel
     .on("broadcast", { event: "room-event" }, ({ payload }) => {
-      options.onEvent(payload as RoomEvent);
+      if (isRoomEvent(payload)) options.onEvent(payload);
     })
     .on("presence", { event: "sync" }, () => {
       const state = channel.presenceState<PresenceMember>();
       const members = Object.values(state)
         .flat()
-        .filter((member) => Boolean(member && member.id && member.role))
+        .filter((member) => (
+          Boolean(member) &&
+          typeof member.id === "string" &&
+          (member.role === "teacher" || member.role === "student") &&
+          typeof member.onlineAt === "number"
+        ))
         .map((member) => ({
           id: member.id,
           role: member.role,
           nickname: member.nickname,
           onlineAt: member.onlineAt,
+          snapshot: isPublicSnapshot(member.snapshot) ? member.snapshot : undefined,
         } satisfies PresenceMember));
       options.onPresence(members);
     });
@@ -74,15 +163,22 @@ async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnect
       };
       const timeout = window.setTimeout(
         () => finish(() => reject(new Error("Realtime connection timed out."))),
-        6500,
+        10_000,
       );
 
       channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          await channel.track(options.member);
-          finish(resolve);
+          try {
+            const result = await channel.track(options.member);
+            ensureRealtimeResult(result, "Presence track");
+            subscribed = true;
+            finish(resolve);
+          } catch (error) {
+            finish(() => reject(error));
+          }
         }
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          if (subscribed && !intentionallyClosed) options.onDisconnect?.();
           finish(() => reject(new Error(`Realtime channel status: ${status}`)));
         }
       });
@@ -94,14 +190,21 @@ async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnect
 
   return {
     kind: "supabase",
+    roomCode: normalizedRoomCode,
     async send(event) {
-      await channel.send({
+      const result = await channel.send({
         type: "broadcast",
         event: "room-event",
         payload: event,
       });
+      ensureRealtimeResult(result, "Realtime send");
+    },
+    async updatePresence(member) {
+      const result = await channel.track(member);
+      ensureRealtimeResult(result, "Presence update");
     },
     async disconnect() {
+      intentionallyClosed = true;
       await channel.untrack();
       await supabase.removeChannel(channel);
     },
@@ -119,13 +222,14 @@ type PresenceWireMessage =
 function connectClassroomDemo(options: ConnectRoomOptions): RoomConnection {
   const channel = new BroadcastChannel(`edu-ethics:${normalizeCode(options.roomCode)}`);
   const members = new Map<string, PresenceMember>();
+  let selfMember = options.member;
   let closed = false;
 
   const publishPresence = (action: "join" | "heartbeat" | "leave") => {
     const message: PresenceWireMessage = {
       scope: "presence",
       action,
-      member: { ...options.member, onlineAt: Date.now() },
+      member: { ...selfMember, onlineAt: Date.now() },
     };
     channel.postMessage(message);
   };
@@ -135,7 +239,9 @@ function connectClassroomDemo(options: ConnectRoomOptions): RoomConnection {
     for (const [id, member] of members) {
       if (member.onlineAt < cutoff) members.delete(id);
     }
-    options.onPresence([options.member, ...members.values()]);
+    options.onPresence([selfMember, ...members.values()].filter(
+      (member, index, list) => list.findIndex((candidate) => candidate.id === member.id) === index,
+    ));
   };
 
   channel.onmessage = (message: MessageEvent<PresenceWireMessage>) => {
@@ -159,14 +265,22 @@ function connectClassroomDemo(options: ConnectRoomOptions): RoomConnection {
     notifyPresence();
   }, 5_000);
 
-  members.set(options.member.id, options.member);
+  members.set(selfMember.id, selfMember);
   publishPresence("join");
   notifyPresence();
 
   return {
     kind: "classroom-demo",
+    roomCode: normalizeCode(options.roomCode),
     async send(event) {
       if (!closed) channel.postMessage({ scope: "event", event } satisfies PresenceWireMessage);
+    },
+    async updatePresence(member) {
+      if (closed) throw new Error("Classroom demo channel is closed.");
+      selfMember = member;
+      members.set(member.id, member);
+      publishPresence("heartbeat");
+      notifyPresence();
     },
     async disconnect() {
       if (closed) return;
@@ -179,14 +293,23 @@ function connectClassroomDemo(options: ConnectRoomOptions): RoomConnection {
 }
 
 export async function connectRoom(options: ConnectRoomOptions): Promise<RoomConnection> {
-  if (supabaseUrl && supabasePublishableKey) {
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return connectClassroomDemo(options);
+  }
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       return await connectSupabase(options);
     } catch (error) {
-      console.warn("Supabase Realtime unavailable; using classroom demo transport.", error);
+      lastError = error;
+      if (attempt === 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, 700));
+      }
     }
   }
-  return connectClassroomDemo(options);
+
+  throw new Error("Supabase Realtime connection failed.", { cause: lastError });
 }
 
 export function hasSupabaseConfig(): boolean {

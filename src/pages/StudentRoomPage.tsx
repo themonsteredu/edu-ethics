@@ -5,16 +5,14 @@ import { Countdown } from "../components/Countdown";
 import { SignalVote } from "../components/SignalVote";
 import { introSlides, lesson1Rounds, voteOptions } from "../data/lesson1";
 import { connectRoom, type RoomConnection, type TransportKind } from "../lib/realtime";
+import { normalizeRoomCodeInput } from "../lib/session";
 import { loadStudentProfile } from "../lib/storage";
 import type { PresenceMember, PublicSessionSnapshot, RoomEvent, VoteChoice } from "../types";
 
 export function StudentRoomPage() {
   const [searchParams] = useSearchParams();
   const profile = useMemo(loadStudentProfile, []);
-  const requestedRoom = (searchParams.get("room") ?? profile?.roomCode ?? "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 8);
+  const requestedRoom = normalizeRoomCodeInput(searchParams.get("room") ?? profile?.roomCode ?? "");
 
   const [snapshot, setSnapshot] = useState<PublicSessionSnapshot | null>(null);
   const [connection, setConnection] = useState<RoomConnection | null>(null);
@@ -23,13 +21,23 @@ export function StudentRoomPage() {
   const [reasonId, setReasonId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [notice, setNotice] = useState("");
+  const [connectionIssue, setConnectionIssue] = useState("");
+  const [roomLookupTimedOut, setRoomLookupTimedOut] = useState(false);
+  const [retryVersion, setRetryVersion] = useState(0);
   const connectionRef = useRef<RoomConnection | null>(null);
+  const snapshotRef = useRef<PublicSessionSnapshot | null>(null);
+  const pendingReceiptRef = useRef<string | null>(null);
+  const voteAckTimerRef = useRef<number | null>(null);
 
   const round = snapshot ? lesson1Rounds[snapshot.roundIndex] : null;
   const phase = round && snapshot ? round.phases[snapshot.phaseIndex] : null;
+  const introSlide = snapshot ? introSlides[snapshot.introIndex] ?? introSlides[0] : null;
   const phaseKey = round && phase ? `${round.id}:${phase.id}` : "waiting";
 
   useEffect(() => {
+    pendingReceiptRef.current = null;
+    if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+    voteAckTimerRef.current = null;
     setChoice(null);
     setReasonId(null);
     setSubmitted(false);
@@ -37,9 +45,17 @@ export function StudentRoomPage() {
   }, [phaseKey]);
 
   useEffect(() => {
+    snapshotRef.current = snapshot;
+  }, [snapshot]);
+
+  useEffect(() => {
     if (!profile || !requestedRoom || profile.roomCode !== requestedRoom) return;
     let cancelled = false;
     let active: RoomConnection | null = null;
+    let requestTimer: number | null = null;
+    let lookupTimer: number | null = null;
+    let retryTimer: number | null = null;
+    let reconnectRequested = false;
     const member: PresenceMember = {
       id: profile.studentId,
       role: "student",
@@ -47,9 +63,56 @@ export function StudentRoomPage() {
       onlineAt: Date.now(),
     };
 
+    setConnection(null);
+    setConnectionIssue("");
+    setRoomLookupTimedOut(false);
+
+    const requestReconnect = (message: string) => {
+      if (cancelled || reconnectRequested) return;
+      reconnectRequested = true;
+      setConnectionIssue(message);
+      setRetryVersion((value) => value + 1);
+    };
+
+    const acceptSnapshot = (nextSnapshot: PublicSessionSnapshot) => {
+      if (nextSnapshot.roomCode !== requestedRoom) return;
+      const current = snapshotRef.current;
+      if (current && nextSnapshot.updatedAt < current.updatedAt) return;
+      snapshotRef.current = nextSnapshot;
+      setSnapshot(nextSnapshot);
+      setRoomLookupTimedOut(false);
+      setConnectionIssue("");
+    };
+
     const onEvent = (event: RoomEvent) => {
       if (event.kind === "teacher-state" && event.snapshot.roomCode === requestedRoom) {
-        setSnapshot(event.snapshot);
+        acceptSnapshot(event.snapshot);
+      }
+      if (
+        event.kind === "vote-accepted" &&
+        event.studentId === profile.studentId &&
+        event.receiptId === pendingReceiptRef.current
+      ) {
+        pendingReceiptRef.current = null;
+        if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+        voteAckTimerRef.current = null;
+        setSubmitted(true);
+        setNotice("교사가 판정을 확인했습니다. 투표가 끝나기 전까지 바꿀 수 있어요.");
+      }
+    };
+
+    const requestState = async () => {
+      const currentConnection = connectionRef.current;
+      if (!currentConnection || snapshotRef.current) return;
+      try {
+        await currentConnection.send({
+          kind: "state-request",
+          senderId: profile.studentId,
+          sentAt: Date.now(),
+        });
+        if (!cancelled) setConnectionIssue("");
+      } catch {
+        requestReconnect("교실 연결을 확인하고 있습니다.");
       }
     };
 
@@ -57,7 +120,11 @@ export function StudentRoomPage() {
       roomCode: requestedRoom,
       member,
       onEvent,
-      onPresence: () => undefined,
+      onPresence: (members) => {
+        const teacher = members.find((presence) => presence.role === "teacher" && presence.snapshot);
+        if (teacher?.snapshot) acceptSnapshot(teacher.snapshot);
+      },
+      onDisconnect: () => requestReconnect("실시간 교실 연결이 끊겼습니다."),
     }).then((roomConnection) => {
       if (cancelled) {
         void roomConnection.disconnect();
@@ -67,50 +134,76 @@ export function StudentRoomPage() {
       connectionRef.current = roomConnection;
       setConnection(roomConnection);
       setTransport(roomConnection.kind);
-      void roomConnection.send({
-        kind: "state-request",
-        senderId: profile.studentId,
-        sentAt: Date.now(),
-      });
+      void requestState();
+      requestTimer = window.setInterval(() => void requestState(), 2500);
+      lookupTimer = window.setTimeout(() => {
+        if (!snapshotRef.current && !cancelled) setRoomLookupTimedOut(true);
+      }, 8000);
+    }).catch(() => {
+      if (cancelled) return;
+      connectionRef.current = null;
+      setConnection(null);
+      setConnectionIssue("실시간 교실에 연결하지 못했습니다.");
+      retryTimer = window.setTimeout(() => setRetryVersion((value) => value + 1), 2500);
     });
-
-    const requestTimer = window.setInterval(() => {
-      void connectionRef.current?.send({
-        kind: "state-request",
-        senderId: profile.studentId,
-        sentAt: Date.now(),
-      });
-    }, 4_000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(requestTimer);
+      if (requestTimer !== null) window.clearInterval(requestTimer);
+      if (lookupTimer !== null) window.clearTimeout(lookupTimer);
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+      pendingReceiptRef.current = null;
+      voteAckTimerRef.current = null;
       if (connectionRef.current === active) connectionRef.current = null;
       if (active) void active.disconnect();
     };
-  }, [profile, requestedRoom]);
+  }, [profile, requestedRoom, retryVersion]);
 
-  if (!profile || requestedRoom.length < 6 || profile.roomCode !== requestedRoom) {
+  if (!profile || requestedRoom.length !== 6 || profile.roomCode !== requestedRoom) {
     return <Navigate to="/join" replace />;
   }
 
   const submitVote = async () => {
     if (!connection || !round || !phase || !choice || !reasonId || snapshot?.status !== "voting") return;
-    await connection.send({
-      kind: "vote-submit",
-      senderId: profile.studentId,
-      sentAt: Date.now(),
-      vote: {
-        studentId: profile.studentId,
-        roundId: round.id,
-        phaseId: phase.id,
-        choice,
-        reasonId,
-        submittedAt: Date.now(),
-      },
-    });
-    setSubmitted(true);
-    setNotice("판정이 전송되었습니다. 투표가 끝나기 전까지 바꿀 수 있어요.");
+    const receiptId = `vote-${crypto.randomUUID()}`;
+    pendingReceiptRef.current = receiptId;
+    if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+    setSubmitted(false);
+    setNotice("판정을 전송하고 있어요.");
+    try {
+      await connection.send({
+        kind: "vote-submit",
+        senderId: profile.studentId,
+        sentAt: Date.now(),
+        receiptId,
+        vote: {
+          studentId: profile.studentId,
+          roundId: round.id,
+          phaseId: phase.id,
+          choice,
+          reasonId,
+          submittedAt: Date.now(),
+        },
+      });
+      if (pendingReceiptRef.current === receiptId) {
+        setNotice("교사의 수신 확인을 기다리고 있어요.");
+        voteAckTimerRef.current = window.setTimeout(() => {
+          if (pendingReceiptRef.current !== receiptId) return;
+          pendingReceiptRef.current = null;
+          voteAckTimerRef.current = null;
+          setSubmitted(false);
+          setNotice("교사가 판정을 확인하지 못했습니다. 다시 눌러 주세요.");
+        }, 5000);
+      }
+    } catch {
+      pendingReceiptRef.current = null;
+      if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+      voteAckTimerRef.current = null;
+      setSubmitted(false);
+      setNotice("판정을 보내지 못했습니다. 연결을 확인한 뒤 다시 눌러 주세요.");
+      setRetryVersion((value) => value + 1);
+    }
   };
 
   return (
@@ -120,17 +213,45 @@ export function StudentRoomPage() {
         <div className="student-header__meta">
           <span>{profile.nickname} 판정관</span>
           <strong>{requestedRoom}</strong>
-          <i className={connection ? "is-online" : ""} title={transport === "supabase" ? "실시간 연결" : "교실 데모 연결"} />
+          <i
+            className={connection && !connectionIssue ? "is-online" : connectionIssue ? "is-error" : ""}
+            title={connection
+              ? connectionIssue || (transport === "supabase" ? "실시간 연결" : "같은 기기 데모 연결")
+              : connectionIssue || "연결 중"}
+          />
         </div>
       </header>
 
       {!snapshot && (
-        <section className="student-waiting">
-          <div className="waiting-radar" aria-hidden="true"><i /><i /><span /></div>
-          <span className="eyebrow">CONNECTING TO CLASS</span>
-          <h1>교사 화면을 찾고 있어요.</h1>
-          <p>수업코드 <strong>{requestedRoom}</strong>에 연결되면 사건이 자동으로 나타납니다.</p>
-          <Link to="/join">수업코드 다시 입력</Link>
+        <section className={`student-waiting ${connectionIssue ? "student-waiting--error" : ""}`}>
+          {!connectionIssue && !roomLookupTimedOut && (
+            <div className="waiting-radar" aria-hidden="true"><i /><i /><span /></div>
+          )}
+          <span className="eyebrow">
+            {connectionIssue ? "CONNECTION RETRY" : roomLookupTimedOut ? "ROOM CHECK" : "CONNECTING TO CLASS"}
+          </span>
+          <h1>
+            {connectionIssue
+              ? "실시간 교실에 다시 연결하고 있어요."
+              : roomLookupTimedOut ? "교사 화면을 찾지 못했어요." : "교사 화면을 찾고 있어요."}
+          </h1>
+          <p>
+            {connectionIssue
+              ? "잠시 후 자동으로 다시 연결합니다. 학교 Wi-Fi가 불안정하면 모바일 데이터도 확인해 주세요."
+              : roomLookupTimedOut
+                ? <>코드 <strong>{requestedRoom}</strong>가 맞는지, 교사 화면이 열려 있는지 확인해 주세요.</>
+                : <>수업코드 <strong>{requestedRoom}</strong>에 연결되면 사건이 자동으로 나타납니다.</>}
+          </p>
+          {(connectionIssue || roomLookupTimedOut) && (
+            <button
+              className="button button--primary student-retry-button"
+              type="button"
+              onClick={() => setRetryVersion((value) => value + 1)}
+            >
+              지금 다시 연결
+            </button>
+          )}
+          <Link to={`/join?room=${requestedRoom}`}>수업코드 다시 입력</Link>
         </section>
       )}
 
@@ -147,12 +268,12 @@ export function StudentRoomPage() {
         </section>
       )}
 
-      {snapshot?.status === "briefing" && (
+      {snapshot?.status === "briefing" && introSlide && (
         <section className="student-briefing">
-          <span className="eyebrow">{introSlides[snapshot.introIndex].eyebrow}</span>
+          <span className="eyebrow">{introSlide.eyebrow}</span>
           <strong className="mobile-slide-number">0{snapshot.introIndex + 1}</strong>
-          <h1>{introSlides[snapshot.introIndex].title}</h1>
-          <p>{introSlides[snapshot.introIndex].prompt}</p>
+          <h1>{introSlide.title}</h1>
+          <p>{introSlide.prompt}</p>
           <div className="student-instruction">전면 화면을 함께 봐 주세요.</div>
         </section>
       )}
@@ -175,6 +296,9 @@ export function StudentRoomPage() {
             reasonTags={phase.suggestedReasonTags}
             submitted={submitted}
             onChoice={(nextChoice) => {
+              pendingReceiptRef.current = null;
+              if (voteAckTimerRef.current !== null) window.clearTimeout(voteAckTimerRef.current);
+              voteAckTimerRef.current = null;
               setChoice(nextChoice);
               setReasonId(null);
               setSubmitted(false);

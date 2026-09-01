@@ -8,6 +8,25 @@ import type {
 
 const ROOM_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
+export function normalizeRoomCodeInput(value: string): string {
+  const trimmed = value.trim();
+
+  try {
+    const url = new URL(trimmed);
+    const roomFromUrl = url.searchParams.get("room");
+    if (roomFromUrl) {
+      return roomFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    }
+  } catch {
+    // The value is a room code or copied classroom text rather than a URL.
+  }
+
+  const labelledCode = trimmed.match(/(?:수업\s*코드|room)\s*[:：-]?\s*([A-Z0-9]{6})(?![A-Z0-9])/i)?.[1];
+  if (labelledCode) return labelledCode.toUpperCase();
+
+  return trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 export function createRoomCode(length = 6): string {
   const values = new Uint32Array(length);
   crypto.getRandomValues(values);
