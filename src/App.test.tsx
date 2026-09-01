@@ -29,7 +29,25 @@ describe("application routes", () => {
     fireEvent.change(screen.getByLabelText("이름 또는 별명"), { target: { value: "민지" } });
     fireEvent.click(screen.getByRole("button", { name: /판정소 입장/ }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("6자리 수업코드");
+    expect(screen.getByRole("alert")).toHaveTextContent("수업코드 6자리");
+  });
+
+  it("rejects an overlong classroom code instead of entering the wrong room", () => {
+    window.history.replaceState({}, "", "/join");
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText("수업코드"), { target: { value: "ABC2345" } });
+    fireEvent.change(screen.getByLabelText("이름 또는 별명"), { target: { value: "민지" } });
+    fireEvent.click(screen.getByRole("button", { name: /판정소 입장/ }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("수업코드 6자리");
+  });
+
+  it("prefills an exact classroom code from the teacher's direct join link", () => {
+    window.history.replaceState({}, "", "/join?room=ZX9K32");
+    render(<App />);
+
+    expect(screen.getByLabelText("수업코드")).toHaveValue("ZX9K32");
   });
 
   it("protects teacher controls behind the configured PIN gate", () => {

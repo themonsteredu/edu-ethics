@@ -682,6 +682,17 @@ blockquote {
   box-shadow: 0 0 0 4px rgba(29, 201, 138, 0.14);
 }
 
+.connection-badge.is-error,
+.student-header__meta i.is-error {
+  color: #c44c47;
+}
+
+.connection-badge.is-error i,
+.student-header__meta i.is-error {
+  background: #d94b47;
+  box-shadow: 0 0 0 4px rgba(217, 75, 71, 0.14);
+}
+
 .student-count strong {
   color: var(--ink);
   font-size: 1.1rem;
@@ -1694,6 +1705,15 @@ blockquote {
   color: #334dc5;
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.student-waiting--error .eyebrow {
+  color: #c44c47;
+}
+
+.student-retry-button {
+  min-width: 190px;
+  margin-top: 1rem;
 }
 
 .student-pass {
