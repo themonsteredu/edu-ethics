@@ -1,10 +1,10 @@
-import { voteOptions } from "../data/lessons";
-import type { ReasonTag, VoteChoice } from "../types";
+import type { ReasonTag, VoteChoice, VoteOption } from "../types";
 
 interface SignalVoteProps {
   selectedChoice: VoteChoice | null;
   selectedReason: string | null;
   reasonTags: ReasonTag[];
+  options: VoteOption[];
   submitted: boolean;
   onChoice: (choice: VoteChoice) => void;
   onReason: (reasonId: string) => void;
@@ -15,6 +15,7 @@ export function SignalVote({
   selectedChoice,
   selectedReason,
   reasonTags,
+  options,
   submitted,
   onChoice,
   onReason,
@@ -23,7 +24,7 @@ export function SignalVote({
   return (
     <div className="signal-vote">
       <div className="signal-buttons" aria-label="판정 선택">
-        {voteOptions.map((option) => (
+        {options.map((option) => (
           <button
             type="button"
             key={option.id}

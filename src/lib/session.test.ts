@@ -97,6 +97,33 @@ describe("lesson session helpers", () => {
     expect(getLessonConfig(snapshot.lessonId).rounds).toHaveLength(4);
   });
 
+  it("creates a separate lesson-three court room", () => {
+    const courtSession = createInitialSession("COURT3", 3);
+    courtSession.status = "results";
+    const courtRound = getLessonConfig(3).rounds[0];
+    const courtVotes: VoteSubmission[] = [{
+      studentId: "jury-1",
+      teamId: 6,
+      roundId: courtRound.id,
+      phaseId: courtRound.phases[0].id,
+      choice: "yellow",
+      reasonId: courtRound.phases[0].suggestedReasonTags[0].id,
+      submittedAt: 1,
+    }];
+
+    const snapshot = buildPublicSnapshot({
+      session: courtSession,
+      votes: courtVotes,
+      connectedStudents: 1,
+      transport: "classroom-demo",
+    });
+
+    expect(snapshot.lessonId).toBe(3);
+    expect(snapshot.counts).toEqual({ green: 0, yellow: 1, red: 0 });
+    expect(getLessonConfig(3).rounds).toHaveLength(3);
+    expect(courtRound.trial?.roles).toHaveLength(6);
+  });
+
   it("returns safe percentages for empty and populated groups", () => {
     expect(percentage(0, 0)).toBe(0);
     expect(percentage(1, 3)).toBe(33);

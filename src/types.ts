@@ -1,5 +1,12 @@
 export type VoteChoice = "green" | "yellow" | "red";
-export type LessonId = 1 | 2;
+export type LessonId = 1 | 2 | 3;
+
+export interface VoteOption {
+  id: VoteChoice;
+  signal: string;
+  label: string;
+  shortLabel: string;
+}
 
 export type SessionStatus =
   | "lobby"
@@ -28,6 +35,22 @@ export interface EthicsKey {
   unlockLine: string;
 }
 
+export interface TrialRole {
+  teamId: number;
+  name: string;
+  lens: string;
+  prompt: string;
+}
+
+export interface TrialDetails {
+  docket: string;
+  charge: string;
+  tension: [string, string];
+  roles: TrialRole[];
+  verdictPrompt: string;
+  classRule: string;
+}
+
 export interface EthicsRound {
   id: string;
   order: number;
@@ -44,6 +67,7 @@ export interface EthicsRound {
     stancePrompts: Record<VoteChoice, string>;
     debriefPrompt: string;
   };
+  trial?: TrialDetails;
 }
 
 export interface VoteCounts {

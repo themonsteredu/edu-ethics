@@ -3,7 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { SignalVote } from "../components/SignalVote";
-import { getLessonConfig, voteOptions } from "../data/lessons";
+import { getLessonConfig } from "../data/lessons";
 import { connectRoom, type RoomConnection, type TransportKind } from "../lib/realtime";
 import { normalizeRoomCodeInput } from "../lib/session";
 import { loadStudentProfile } from "../lib/storage";
@@ -32,6 +32,7 @@ export function StudentRoomPage() {
   const lesson = getLessonConfig(snapshot?.lessonId);
   const round = snapshot ? lesson.rounds[snapshot.roundIndex] : null;
   const phase = round && snapshot ? round.phases[snapshot.phaseIndex] : null;
+  const trialRole = round?.trial?.roles.find((role) => role.teamId === (profile?.teamId ?? 1));
   const introSlide = snapshot ? lesson.introSlides[snapshot.introIndex] ?? lesson.introSlides[0] : null;
   const phaseKey = round && phase ? `${lesson.id}:${round.id}:${phase.id}` : "waiting";
 
@@ -261,11 +262,11 @@ export function StudentRoomPage() {
       {snapshot?.status === "lobby" && (
         <section className="student-lobby">
           <div className="student-pass">
-            <span>{lesson.id === 2 ? "AI ETHICS BATTLER" : "AI ETHICS JUDGE"}</span>
+            <span>{lesson.id === 3 ? "AI ETHICS JURY" : lesson.id === 2 ? "AI ETHICS BATTLER" : "AI ETHICS JUDGE"}</span>
             <strong>{profile.nickname}</strong>
-            <small>{profile.teamId ?? 1}모둠 · ROOM {requestedRoom}</small>
+            <small>{profile.teamId ?? 1}모둠{trialRole ? ` · ${trialRole.name}` : ""} · ROOM {requestedRoom}</small>
           </div>
-          <h1>{lesson.id === 2 ? "배틀러 등록 완료" : "판정관 등록 완료"}</h1>
+          <h1>{lesson.id === 3 ? "배심원 등록 완료" : lesson.id === 2 ? "배틀러 등록 완료" : "판정관 등록 완료"}</h1>
           <p>교사가 수업을 시작할 때까지 전면 화면을 봐 주세요.</p>
           <div className="waiting-dots"><i /><i /><i /></div>
         </section>
@@ -297,6 +298,7 @@ export function StudentRoomPage() {
             selectedChoice={choice}
             selectedReason={reasonId}
             reasonTags={phase.suggestedReasonTags}
+            options={lesson.voteOptions}
             submitted={submitted}
             onChoice={(nextChoice) => {
               pendingReceiptRef.current = null;
@@ -323,24 +325,35 @@ export function StudentRoomPage() {
           <div className={`my-signal my-signal--${choice ?? "none"}`}>
             <i />
             <span>나의 판정</span>
-            <strong>{voteOptions.find((option) => option.id === choice)?.label ?? "미응답"}</strong>
+            <strong>{lesson.voteOptions.find((option) => option.id === choice)?.label ?? "미응답"}</strong>
           </div>
           <h1>우리 반 결과는 전면 화면에서 확인하세요.</h1>
           {snapshot.phaseIndex < round.phases.length - 1 ? (
-            <p>{lesson.id === 2 ? "전면 화면을 보며 30초 변론을 준비하세요." : "잠시 후 새로운 조건이 공개됩니다. 판단을 바꿔도 괜찮아요."}</p>
+            <p>{lesson.id === 3 ? "내 모둠의 법정 역할을 확인하고 심리 질문을 준비하세요." : lesson.id === 2 ? "전면 화면을 보며 30초 변론을 준비하세요." : "잠시 후 새로운 조건이 공개됩니다. 판단을 바꿔도 괜찮아요."}</p>
           ) : (
-            <p>다른 선택을 한 친구의 이유를 들어볼 준비를 하세요.</p>
+            <p>{lesson.id === 3 ? "최종 배심 토의에서 판결 근거와 필요한 조건을 말해 보세요." : "다른 선택을 한 친구의 이유를 들어볼 준비를 하세요."}</p>
           )}
         </section>
       )}
 
       {snapshot && round && snapshot.status === "discussion" && (
         <section className="student-discussion">
-          <span className="eyebrow">{lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
-          <h1>{lesson.id === 2 && round.battle && choice ? round.battle.stancePrompts[choice] : round.discussionPrompt}</h1>
-          {lesson.id === 2 && round.battle ? (
+          <span className="eyebrow">{lesson.id === 3 ? "COURTROOM HEARING" : lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
+          <h1>{lesson.id === 3 && trialRole ? trialRole.prompt : lesson.id === 2 && round.battle && choice ? round.battle.stancePrompts[choice] : round.discussionPrompt}</h1>
+          {lesson.id === 3 && round.trial && trialRole ? (
             <>
-              <div className="student-team-badge">{profile.teamId ?? 1}모둠 · {voteOptions.find((option) => option.id === choice)?.signal ?? "READY"}</div>
+              <div className="student-team-badge">{profile.teamId ?? 1}모둠 · {trialRole.name}</div>
+              <div className="student-trial-lens">오늘의 관점 <strong>{trialRole.lens}</strong></div>
+              <div className="student-battle-tension">
+                <span>{round.trial.tension[0]}</span>
+                <i>VS</i>
+                <span>{round.trial.tension[1]}</span>
+              </div>
+              <p>사건 기록에서 근거를 하나 찾아 “우리 역할에서는 …이 중요합니다.”로 말해 보세요.</p>
+            </>
+          ) : lesson.id === 2 && round.battle ? (
+            <>
+              <div className="student-team-badge">{profile.teamId ?? 1}모둠 · {lesson.voteOptions.find((option) => option.id === choice)?.signal ?? "READY"}</div>
               <div className="student-battle-tension">
                 <span>{round.battle.tension[0]}</span>
                 <i>VS</i>
@@ -363,8 +376,8 @@ export function StudentRoomPage() {
 
       {snapshot && round && snapshot.status === "key" && (
         <section className="student-key">
-          <div className="student-key__symbol" aria-hidden="true">◆</div>
-          <span className="eyebrow">{lesson.id === 2 ? "BATTLE PRINCIPLE" : "ETHICS KEY UNLOCKED"}</span>
+          <div className="student-key__symbol" aria-hidden="true">{lesson.id === 3 ? "⚖" : "◆"}</div>
+          <span className="eyebrow">{lesson.id === 3 ? "COURT RULING" : lesson.id === 2 ? "BATTLE PRINCIPLE" : "ETHICS KEY UNLOCKED"}</span>
           <h1>{round.ethicsKey.name}</h1>
           <p>{round.ethicsKey.unlockLine}</p>
           <div className="student-key__count">{snapshot.unlockedKeyIds.length} / {lesson.rounds.length}</div>

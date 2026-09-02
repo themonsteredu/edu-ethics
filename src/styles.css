@@ -249,7 +249,7 @@ blockquote {
 .hero__copy h1 {
   max-width: 700px;
   margin: 1.05rem 0 1.55rem;
-  font-size: clamp(2.75rem, 5.2vw, 5.35rem);
+  font-size: clamp(2.4rem, 4.6vw, 4.6rem);
   font-weight: 700;
   letter-spacing: -0.065em;
   line-height: 1.08;
@@ -420,7 +420,7 @@ blockquote {
 
 .section-heading h2 {
   margin: 0.6rem 0 0;
-  font-size: clamp(2rem, 4vw, 3.8rem);
+  font-size: clamp(1.8rem, 3.4vw, 3.2rem);
   letter-spacing: -0.055em;
 }
 
@@ -449,6 +449,11 @@ blockquote {
 .lesson-card--battle {
   color: var(--paper-bright);
   background: #334dc5;
+}
+
+.lesson-card--court {
+  color: var(--paper-bright);
+  background: #653653;
 }
 
 .lesson-card--battle .lesson-card__meta,
@@ -496,7 +501,9 @@ blockquote {
 }
 
 .lesson-card.lesson-card--battle .lesson-card__meta,
-.lesson-card.lesson-card--battle p {
+.lesson-card.lesson-card--battle p,
+.lesson-card.lesson-card--court .lesson-card__meta,
+.lesson-card.lesson-card--court p {
   color: #d7ddff;
 }
 
@@ -548,7 +555,7 @@ blockquote {
 
 .entry-card h1 {
   margin: 0.65rem 0 0.75rem;
-  font-size: clamp(2rem, 8vw, 3.15rem);
+  font-size: clamp(1.75rem, 6vw, 2.6rem);
   letter-spacing: -0.06em;
 }
 
@@ -695,6 +702,16 @@ blockquote {
   background: #5268cb;
 }
 
+.teacher-page--lesson-3 .room-code-badge {
+  background: #653653;
+}
+
+.teacher-page--lesson-3 .round-progress span.is-current {
+  color: var(--paper-bright);
+  border-color: #8e5679;
+  background: #8e5679;
+}
+
 .connection-badge,
 .student-count {
   display: flex;
@@ -797,7 +814,7 @@ blockquote {
 
 .lobby-copy h1 {
   margin: 0.8rem 0 1.5rem;
-  font-size: clamp(3.2rem, 6.8vw, 7rem);
+  font-size: clamp(2.5rem, 5vw, 5rem);
   letter-spacing: -0.075em;
   line-height: 1.05;
 }
@@ -833,7 +850,7 @@ blockquote {
   padding: 0.6rem 0;
   border-top: 2px solid var(--ink);
   border-bottom: 2px solid var(--ink);
-  font-size: clamp(3rem, 7vw, 7rem);
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1;
@@ -912,7 +929,7 @@ blockquote {
   justify-content: center;
   color: var(--ink);
   background: var(--acid);
-  font-size: clamp(6rem, 14vw, 13rem);
+  font-size: clamp(5rem, 11vw, 10rem);
   font-weight: 700;
   letter-spacing: -0.08em;
 }
@@ -933,7 +950,7 @@ blockquote {
 
 .briefing-copy h1 {
   margin: 0.8rem 0 1.5rem;
-  font-size: clamp(2.6rem, 5.4vw, 6rem);
+  font-size: clamp(2.1rem, 4.1vw, 4.3rem);
   letter-spacing: -0.065em;
   line-height: 1.13;
 }
@@ -950,7 +967,7 @@ blockquote {
   padding: 1.1rem 1.4rem;
   border-left: 4px solid var(--acid);
   background: rgba(255, 255, 255, 0.06);
-  font-size: clamp(1.15rem, 2vw, 1.8rem);
+  font-size: clamp(1rem, 1.5vw, 1.45rem);
   font-weight: 700;
   line-height: 1.6;
 }
@@ -1100,7 +1117,7 @@ blockquote {
 
 .graph-heading h2 {
   margin: 0.45rem 0 0;
-  font-size: clamp(1.65rem, 3.4vw, 3rem);
+  font-size: clamp(1.45rem, 2.6vw, 2.4rem);
   letter-spacing: -0.055em;
 }
 
@@ -1321,7 +1338,7 @@ blockquote {
 
 .case-copy h1 {
   margin: 0.55rem 0 clamp(1rem, 3vh, 2.2rem);
-  font-size: clamp(2rem, 4.3vw, 4.8rem);
+  font-size: clamp(1.65rem, 3.1vw, 3.4rem);
   letter-spacing: -0.065em;
   line-height: 1.08;
 }
@@ -1332,7 +1349,7 @@ blockquote {
   padding-left: clamp(1rem, 2vw, 1.5rem);
   color: #edf0f5;
   border-left: 3px solid rgba(255, 255, 255, 0.22);
-  font-size: clamp(1rem, 1.8vw, 1.45rem);
+  font-size: clamp(0.95rem, 1.35vw, 1.2rem);
   font-weight: 500;
   line-height: 1.75;
 }
@@ -1461,6 +1478,64 @@ blockquote {
 .battle-stance-prompts .yellow b { color: #9f7600; }
 .battle-stance-prompts .red b { color: #c8433e; }
 
+.discussion-card--trial {
+  max-height: calc(100% - 3rem);
+  overflow: auto;
+  border-left-color: #b9799c;
+}
+
+.trial-tension {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 0.65rem 0;
+  padding: 0.65rem;
+  background: #f5eaf0;
+  text-align: center;
+}
+
+.trial-tension strong {
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.trial-tension i {
+  color: #8e5679;
+  font-size: 0.6rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.trial-hearing-prompts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.trial-hearing-prompts > span {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.52rem 0.58rem;
+  color: #4f5b70;
+  background: #f2f1ec;
+  font-size: 0.59rem;
+  line-height: 1.45;
+}
+
+.trial-hearing-prompts b {
+  color: #653653;
+  font-size: 0.58rem;
+}
+
+.discussion-card .trial-verdict-prompt {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  color: #653653;
+  font-weight: 700;
+}
+
 .team-battle-board {
   padding: 0.8rem 1rem 0.9rem;
   border-top: 1px solid var(--line);
@@ -1538,6 +1613,84 @@ blockquote {
 .team-tile.has-changed small {
   color: #334dc5;
   font-weight: 700;
+}
+
+.trial-role-board {
+  padding: 0.72rem 0.9rem 0.85rem;
+  border-top: 1px solid var(--line);
+  background: #eee8e9;
+}
+
+.trial-role-board__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.trial-role-board__heading div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.trial-role-board__heading span,
+.trial-role-board__heading small {
+  color: #7f7480;
+  font-size: 0.53rem;
+}
+
+.trial-role-board__heading span {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.trial-role-board__heading strong {
+  font-size: 0.76rem;
+}
+
+.trial-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.trial-role-tile {
+  min-width: 0;
+  padding: 0.48rem 0.55rem;
+  border-left: 4px solid #aaa4aa;
+  background: var(--paper-bright);
+}
+
+.trial-role-tile--green { border-color: var(--green); }
+.trial-role-tile--yellow { border-color: var(--yellow); }
+.trial-role-tile--red { border-color: var(--red); }
+.trial-role-tile--split { border-color: #8e5679; }
+
+.trial-role-tile > span,
+.trial-role-tile small {
+  display: block;
+  overflow: hidden;
+  color: #827a85;
+  font-size: 0.49rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trial-role-tile strong {
+  display: block;
+  margin: 0.18rem 0;
+  font-size: 0.66rem;
+}
+
+.teacher-page--lesson-3 .teacher-stage--discussion {
+  grid-template-columns: minmax(400px, 0.43fr) minmax(520px, 0.57fr);
+}
+
+.teacher-page--lesson-3 .teacher-action--key {
+  background: #653653;
 }
 
 .teacher-controls {
@@ -1703,7 +1856,7 @@ blockquote {
 
 .key-reveal-screen h1 {
   margin: 0.25rem 0 0.65rem;
-  font-size: clamp(4rem, 9vw, 9rem);
+  font-size: clamp(3rem, 6vw, 6rem);
   letter-spacing: -0.08em;
   line-height: 1;
 }
@@ -1749,14 +1902,14 @@ blockquote {
 
 .complete-screen > h1 {
   margin: 0.6rem 0 1.7rem;
-  font-size: clamp(2.3rem, 4.5vw, 4.8rem);
+  font-size: clamp(2rem, 3.6vw, 3.7rem);
   letter-spacing: -0.065em;
   line-height: 1.14;
 }
 
 .complete-keys {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
@@ -1854,7 +2007,7 @@ blockquote {
 .student-key h1,
 .student-complete h1 {
   margin: 0.55rem 0 0.75rem;
-  font-size: clamp(2rem, 9vw, 3.3rem);
+  font-size: clamp(1.65rem, 7vw, 2.6rem);
   letter-spacing: -0.06em;
   line-height: 1.2;
 }
@@ -1928,6 +2081,10 @@ blockquote {
   border-top-color: #6f8cff;
 }
 
+.student-page--lesson-3 .student-pass {
+  border-top-color: #b9799c;
+}
+
 .waiting-dots { display: flex; gap: 0.4rem; margin-top: 1.1rem; }
 .waiting-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); animation: liveBlink 700ms infinite alternate; }
 .waiting-dots i:nth-child(2) { animation-delay: 200ms; }
@@ -1941,7 +2098,7 @@ blockquote {
 }
 
 .student-briefing .eyebrow { color: var(--green); }
-.mobile-slide-number { margin: 2.5rem 0 0; color: var(--acid); font-size: 5.5rem; letter-spacing: -0.08em; line-height: 1; }
+.mobile-slide-number { margin: 2.5rem 0 0; color: var(--acid); font-size: 4rem; letter-spacing: -0.08em; line-height: 1; }
 .student-briefing p { color: #c4cbd7; font-size: 1rem; }
 .student-instruction { margin-top: 2rem; padding: 0.75rem 1rem; color: var(--ink); background: var(--acid); font-size: 0.72rem; font-weight: 700; }
 
@@ -1968,7 +2125,7 @@ blockquote {
 
 .student-case h1 {
   margin: 1.2rem 0 0.8rem;
-  font-size: clamp(1.85rem, 8vw, 2.7rem);
+  font-size: clamp(1.55rem, 6.2vw, 2.2rem);
   letter-spacing: -0.06em;
   line-height: 1.15;
 }
@@ -2155,6 +2312,17 @@ blockquote {
   font-weight: 700;
 }
 
+.student-trial-lens {
+  margin: 0 0 0.75rem;
+  color: #b9c3d1;
+  font-size: 0.7rem;
+}
+
+.student-trial-lens strong {
+  margin-left: 0.35rem;
+  color: var(--paper-bright);
+}
+
 .student-battle-tension {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -2200,7 +2368,7 @@ blockquote {
 
 .student-key__symbol { display: grid; place-items: center; width: 100px; height: 100px; margin-bottom: 1rem; color: var(--acid); border: 1px solid rgba(255, 227, 108, 0.35); border-radius: 50%; box-shadow: 0 0 50px rgba(255, 227, 108, 0.15); font-size: 3rem; }
 .student-key .eyebrow { color: var(--acid); }
-.student-key h1 { color: var(--acid); font-size: clamp(4.2rem, 20vw, 7rem); }
+.student-key h1 { color: var(--acid); font-size: clamp(3rem, 15vw, 5rem); }
 .student-key p { max-width: 420px; color: #c1c9d5; }
 .student-key__count { margin-top: 1.2rem; color: #7d8ba0; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; }
 
@@ -2213,6 +2381,137 @@ blockquote {
 .student-complete__keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.45rem; margin: 1.5rem 0; }
 .student-complete__keys span { padding: 0.55rem 0.75rem; color: var(--ink); background: var(--acid); font-size: 0.7rem; font-weight: 700; }
 .student-complete blockquote { margin: 1rem 0 0; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.16); color: #d3d9e2; font-size: 0.85rem; line-height: 1.7; }
+
+/* School laptops and classroom displays often have limited vertical space. */
+@media (max-height: 800px) and (min-width: 721px) {
+  .lobby-copy,
+  .lobby-code-panel {
+    padding: 2.5rem 4vw;
+  }
+
+  .lobby-copy h1 {
+    font-size: clamp(2.3rem, 4.2vw, 4rem);
+  }
+
+  .lobby-room-code {
+    font-size: clamp(2.7rem, 5vw, 4.5rem);
+  }
+
+  .briefing-number {
+    font-size: clamp(5rem, 9vw, 7.5rem);
+  }
+
+  .briefing-copy {
+    padding: 2rem 4vw;
+  }
+
+  .briefing-copy h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+  }
+
+  .briefing-copy p {
+    line-height: 1.6;
+  }
+
+  .briefing-copy blockquote {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+  }
+
+  .vote-graph--revealed {
+    padding: 1.4rem 2vw;
+  }
+
+  .graph-heading {
+    margin-bottom: 1.2rem;
+  }
+
+  .bars {
+    gap: 0.8rem;
+  }
+
+  .reason-ranking {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+  }
+
+  .locked-orbit {
+    width: 120px;
+    height: 120px;
+    margin: 0.9rem auto 1rem;
+  }
+
+  .situation-panel {
+    padding: 1.4rem 2.5vw;
+  }
+
+  .case-copy {
+    padding: 0.6rem 0;
+  }
+
+  .case-copy h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(1.55rem, 2.5vw, 2.5rem);
+  }
+
+  .case-copy blockquote {
+    margin-bottom: 1rem;
+    font-size: clamp(0.88rem, 1.15vw, 1.05rem);
+    line-height: 1.6;
+  }
+
+  .case-question {
+    padding-top: 0.7rem;
+  }
+
+  .discussion-card {
+    inset: auto 1.4rem 1.2rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .discussion-card h2 {
+    font-size: clamp(1.1rem, 1.65vw, 1.45rem);
+    line-height: 1.4;
+  }
+
+  .key-reveal-screen {
+    padding: 1.2rem 2rem;
+  }
+
+  .ethics-key-symbol {
+    width: 78px;
+    height: 78px;
+    margin-bottom: 0.8rem;
+  }
+
+  .ethics-key-symbol span {
+    font-size: 2.5rem;
+  }
+
+  .key-reveal-screen h1 {
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+  }
+
+  .complete-screen {
+    padding: 1.5rem 2rem;
+  }
+
+  .complete-screen > h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(1.9rem, 3vw, 2.8rem);
+  }
+
+  .complete-keys article {
+    min-height: 145px;
+    padding: 0.9rem;
+  }
+
+  .complete-keys article strong {
+    margin-top: 1.3rem;
+  }
+}
 
 @media (max-width: 980px) {
   .hero {
@@ -2245,6 +2544,10 @@ blockquote {
     grid-template-columns: minmax(280px, 0.47fr) minmax(0, 0.53fr);
   }
 
+  .teacher-page--lesson-3 .teacher-stage--discussion {
+    grid-template-columns: minmax(360px, 0.45fr) minmax(480px, 0.55fr);
+  }
+
   .bar-row {
     grid-template-columns: 92px 1fr 58px;
   }
@@ -2272,7 +2575,7 @@ blockquote {
   }
 
   .hero__copy h1 {
-    font-size: clamp(2.45rem, 13vw, 4.1rem);
+    font-size: clamp(2.2rem, 11vw, 3.5rem);
   }
 
   .hero__actions {
@@ -2330,6 +2633,10 @@ blockquote {
     grid-template-columns: 1fr;
   }
 
+  .teacher-page--lesson-3 .teacher-stage--discussion {
+    grid-template-columns: 1fr;
+  }
+
   .teacher-lobby {
     overflow: auto;
   }
@@ -2379,6 +2686,11 @@ blockquote {
 
   .team-battle-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .trial-role-grid,
+  .trial-hearing-prompts {
+    grid-template-columns: 1fr 1fr;
   }
 
   .battle-stance-prompts {

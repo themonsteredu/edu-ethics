@@ -62,7 +62,7 @@ function isPublicSnapshot(value: unknown): value is PublicSessionSnapshot {
   );
   return (
     typeof value.roomCode === "string" &&
-    (value.lessonId === undefined || value.lessonId === 1 || value.lessonId === 2) &&
+    (value.lessonId === undefined || value.lessonId === 1 || value.lessonId === 2 || value.lessonId === 3) &&
     statuses.has(String(value.status)) &&
     Number.isInteger(value.introIndex) &&
     Number.isInteger(value.roundIndex) &&

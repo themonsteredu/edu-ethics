@@ -3,6 +3,7 @@ import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { SituationPanel } from "../components/SituationPanel";
 import { TeamBattleBoard } from "../components/TeamBattleBoard";
+import { TrialRoleBoard } from "../components/TrialRoleBoard";
 import { VoteGraph } from "../components/VoteGraph";
 import { getLessonConfig } from "../data/lessons";
 import { connectRoom, hasSupabaseConfig, type RoomConnection, type TransportKind } from "../lib/realtime";
@@ -314,6 +315,16 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
           </button>
         );
       }
+      if (lesson.id === 3) {
+        return (
+          <button
+            className="teacher-action teacher-action--primary"
+            onClick={() => updateSession({ status: "discussion", votingEndsAt: Date.now() + 45_000 })}
+          >
+            {session.phaseIndex === 0 ? "역할별 심리 시작" : "최종 배심 토의"} <span>⚖</span>
+          </button>
+        );
+      }
       if (session.phaseIndex < round.phases.length - 1) {
         return (
           <button className="teacher-action teacher-action--alert" onClick={() => beginVote({ phaseIndex: session.phaseIndex + 1 })}>
@@ -328,16 +339,16 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
       );
     }
     if (session.status === "discussion") {
-      if (lesson.id === 2 && session.phaseIndex < round.phases.length - 1) {
+      if ((lesson.id === 2 || lesson.id === 3) && session.phaseIndex < round.phases.length - 1) {
         return (
           <button className="teacher-action teacher-action--alert" onClick={() => beginVote({ phaseIndex: session.phaseIndex + 1 })}>
-            조건 카드 공개 · 재판정 <span>!</span>
+            {lesson.id === 3 ? "증거·증언 공개 · 재판결" : "조건 카드 공개 · 재판정"} <span>!</span>
           </button>
         );
       }
       return (
         <button className="teacher-action teacher-action--key" onClick={revealKey}>
-          {lesson.id === 2 ? "판정 원칙 정리" : "윤리 열쇠 해제"} <span>◆</span>
+          {lesson.id === 3 ? "최종 판결문 공개" : lesson.id === 2 ? "판정 원칙 정리" : "윤리 열쇠 해제"} <span>◆</span>
         </button>
       );
     }
@@ -412,7 +423,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
 
       {!["lobby", "briefing", "key", "complete"].includes(session.status) && (
         <section className={`teacher-stage teacher-stage--${session.status}`}>
-          <div className={lesson.id === 2 ? "battle-results-column" : "teacher-graph-column"}>
+          <div className={lesson.id === 2 || lesson.id === 3 ? "battle-results-column" : "teacher-graph-column"}>
             <VoteGraph
               counts={snapshot.counts}
               previousCounts={snapshot.previousCounts}
@@ -420,22 +431,50 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
               connectedStudents={connectedStudents}
               reasonCounts={snapshot.reasonCounts}
               reasonTags={phase.suggestedReasonTags}
+              options={lesson.voteOptions}
+              title={lesson.id === 3 ? "배심원단의 판결" : undefined}
             />
             {lesson.id === 2 && snapshot.counts && (
               <TeamBattleBoard
                 currentVotes={currentPhaseVotes}
                 previousVotes={previousPhaseVotes}
                 members={members}
+                options={lesson.voteOptions}
+              />
+            )}
+            {lesson.id === 3 && snapshot.counts && round.trial && (
+              <TrialRoleBoard
+                roles={round.trial.roles}
+                votes={currentPhaseVotes}
+                members={members}
+                options={lesson.voteOptions}
               />
             )}
           </div>
           <div className="teacher-case-area">
             <SituationPanel round={round} phase={phase} status={session.status} />
             {session.status === "discussion" && (
-              <div className={`discussion-card ${lesson.id === 2 ? "discussion-card--battle" : ""}`}>
-                <span>{lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
+              <div className={`discussion-card ${lesson.id === 2 ? "discussion-card--battle" : ""} ${lesson.id === 3 ? "discussion-card--trial" : ""}`}>
+                <span>{lesson.id === 3 ? "COURTROOM HEARING" : lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
                 <h2>{round.discussionPrompt}</h2>
-                {lesson.id === 2 && round.battle ? (
+                {lesson.id === 3 && round.trial ? (
+                  <>
+                    <div className="trial-tension">
+                      <strong>{round.trial.tension[0]}</strong>
+                      <i>VS</i>
+                      <strong>{round.trial.tension[1]}</strong>
+                    </div>
+                    <div className="trial-hearing-prompts">
+                      {round.trial.roles.map((role) => (
+                        <span key={role.teamId}>
+                          <b>{role.teamId}모둠 · {role.name}</b>
+                          {role.prompt}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="trial-verdict-prompt">판결문 확인 · {round.trial.verdictPrompt}</p>
+                  </>
+                ) : lesson.id === 2 && round.battle ? (
                   <>
                     <div className="battle-tension">
                       <strong>{round.battle.tension[0]}</strong>
@@ -461,7 +500,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
         <section className="key-reveal-screen">
           <div className="key-reveal-screen__index">KEY {String(session.roundIndex + 1).padStart(2, "0")}</div>
           <div className="ethics-key-symbol" aria-hidden="true"><span>◆</span></div>
-          <span className="eyebrow">{lesson.id === 2 ? "이번 사건의 판정 원칙" : "오늘의 윤리 열쇠 획득"}</span>
+          <span className="eyebrow">{lesson.id === 3 ? "COURT RULING · 최종 판결 원칙" : lesson.id === 2 ? "이번 사건의 판정 원칙" : "오늘의 윤리 열쇠 획득"}</span>
           <h1>{round.ethicsKey.name}</h1>
           <p>{round.ethicsKey.unlockLine}</p>
           <div className="key-progress">
@@ -483,7 +522,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
               <article key={item.id}>
                 <span>0{index + 1}</span>
                 <strong>{item.ethicsKey.name}</strong>
-                <p>{item.ethicsKey.unlockLine}</p>
+                <p>{lesson.id === 3 ? item.trial?.classRule : item.ethicsKey.unlockLine}</p>
               </article>
             ))}
           </div>
@@ -513,6 +552,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
           <p>{round.teacherFacilitationNote}</p>
           <dl>
             <div><dt>예상 이동</dt><dd>{round.expectedMovement}</dd></div>
+            {round.trial && <div><dt>판결 쟁점</dt><dd>{round.trial.tension.join(" ↔ ")}</dd></div>}
             <div><dt>운영 원칙</dt><dd>판단 변경은 감점이 아니라 좋은 근거를 발견한 증거입니다.</dd></div>
           </dl>
           <button onClick={() => setShowNotes(false)}>확인</button>

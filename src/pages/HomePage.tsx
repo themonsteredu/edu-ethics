@@ -1,7 +1,17 @@
 import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
 
-const lessons = [
+interface HomeLesson {
+  number: string;
+  tag: string;
+  title: string;
+  description: string;
+  active: boolean;
+  href: string;
+  tone: "signal" | "battle" | "court";
+}
+
+const lessons: HomeLesson[] = [
   {
     number: "01",
     tag: "선택",
@@ -9,6 +19,7 @@ const lessons = [
     description: "조건이 바뀔 때마다 신호등 판정을 내리고 우리 반 판단의 움직임을 확인합니다.",
     active: true,
     href: "/teacher?lesson=1",
+    tone: "signal",
   },
   {
     number: "02",
@@ -16,16 +27,17 @@ const lessons = [
     title: "AI 윤리 딜레마 배틀",
     description: "모둠별로 근거를 세우고 상대 팀의 판정을 바꾸는 설득 대결을 진행합니다.",
     active: true,
-    featured: true,
     href: "/teacher?lesson=2",
+    tone: "battle",
   },
   {
     number: "03",
     tag: "판결",
     title: "AI 윤리 재판소",
     description: "복합 사건을 판결하고 우리 반이 지킬 AI 사용 규칙을 직접 제정합니다.",
-    active: false,
-    href: "",
+    active: true,
+    href: "/teacher?lesson=3",
+    tone: "court",
   },
 ];
 
@@ -55,8 +67,8 @@ export function HomePage() {
             <Link className="button button--primary" to="/join">
               수업코드로 입장 <span>→</span>
             </Link>
-            <Link className="button button--ghost" to="/teacher?lesson=2">
-              2차시 수업 열기
+            <Link className="button button--ghost" to="/teacher?lesson=3">
+              3차시 수업 열기
             </Link>
           </div>
         </div>
@@ -89,7 +101,7 @@ export function HomePage() {
         </div>
         <div className="lesson-grid">
           {lessons.map((lesson) => (
-            <article className={`lesson-card ${lesson.active ? "lesson-card--active" : ""} ${lesson.featured ? "lesson-card--battle" : ""}`} key={lesson.number}>
+            <article className={`lesson-card ${lesson.active ? "lesson-card--active" : ""} lesson-card--${lesson.tone}`} key={lesson.number}>
               <div className="lesson-card__meta">
                 <span>{lesson.number}</span>
                 <b>{lesson.tag}</b>
@@ -97,7 +109,7 @@ export function HomePage() {
               <h3>{lesson.title}</h3>
               <p>{lesson.description}</p>
               <div className="lesson-card__status">
-                {lesson.active ? lesson.featured ? "NOW OPEN · 45분" : "OPEN · 45분" : "NEXT LESSON"}
+                {lesson.active ? lesson.tone === "court" ? "NEW · 45분" : "OPEN · 45분" : "NEXT LESSON"}
               </div>
               {lesson.active && <Link className="lesson-card__link" to={lesson.href}>교사 수업 열기 →</Link>}
             </article>

@@ -1,6 +1,5 @@
-import { voteOptions } from "../data/lessons";
 import { countTotal, percentage } from "../lib/session";
-import type { ReasonTag, VoteCounts } from "../types";
+import type { ReasonTag, VoteCounts, VoteOption } from "../types";
 
 interface VoteGraphProps {
   counts: VoteCounts | null;
@@ -9,6 +8,7 @@ interface VoteGraphProps {
   connectedStudents: number;
   reasonCounts?: Record<string, number> | null;
   reasonTags?: ReasonTag[];
+  options: VoteOption[];
   title?: string;
 }
 
@@ -19,6 +19,7 @@ export function VoteGraph({
   connectedStudents,
   reasonCounts,
   reasonTags = [],
+  options,
   title = "우리 반의 선택",
 }: VoteGraphProps) {
   if (!counts) {
@@ -69,7 +70,7 @@ export function VoteGraph({
       </div>
 
       <div className="bars">
-        {voteOptions.map((option) => {
+        {options.map((option) => {
           const value = counts[option.id];
           const percent = percentage(value, total);
           const before = previousCounts

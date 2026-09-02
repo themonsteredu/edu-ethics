@@ -2,12 +2,14 @@ import { FormEvent, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { TeacherRoomPage } from "./TeacherRoomPage";
+import type { LessonId } from "../types";
 
 const UNLOCK_KEY = "edu-ethics:teacher-unlocked";
 
 export function TeacherGate() {
   const [searchParams] = useSearchParams();
-  const lessonId = searchParams.get("lesson") === "2" ? 2 : 1;
+  const requestedLesson = Number(searchParams.get("lesson"));
+  const lessonId: LessonId = requestedLesson === 2 ? 2 : requestedLesson === 3 ? 3 : 1;
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(UNLOCK_KEY) === "yes");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
