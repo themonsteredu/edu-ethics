@@ -53,7 +53,7 @@ const lessonConfigs: Record<LessonId, LessonConfig> = {
     eyebrow: "LESSON 03 · AI ETHICS COURT",
     title: "AI 윤리 재판소",
     shortTitle: "AI 윤리 배심원",
-    lobbyGuide: "모둠별 법정 역할을 확인한 뒤 개정하세요. 1차 판결, 역할별 심리, 증거 공개, 최종 판결 순서로 진행합니다.",
+    lobbyGuide: "모든 학생이 배심원이 되어 참여합니다. 1차 판결, 세 가지 확인 질문, 증거 공개, 최종 판결 순서로 진행합니다.",
     completionTitle: "세 개의 판결 원칙으로 우리 반 AI 사용 규칙을 완성했습니다.",
     completionPrompt: "우리 반 AI 윤리 헌장에 가장 먼저 넣을 규칙은 무엇인가요?",
     voteOptions: [

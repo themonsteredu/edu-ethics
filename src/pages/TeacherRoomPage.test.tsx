@@ -48,7 +48,7 @@ describe("lesson two teacher flow", () => {
 
     expect(screen.getByRole("heading", { name: "AI 윤리 재판소" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /오프닝 시작/ }));
-    expect(screen.getByRole("heading", { name: /우리 반 AI 윤리 재판소/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /모두가 AI 윤리 배심원/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
     fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
@@ -56,10 +56,12 @@ describe("lesson two teacher flow", () => {
     expect(screen.getByRole("heading", { name: "교장 선생님이 래퍼가 됐다?" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /투표 마감/ }));
-    expect(screen.getByText("역할별 심리석")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /역할별 심리 시작/ }));
+    expect(screen.getByRole("heading", { name: "배심원단의 판결" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /세 질문으로 따져보기/ }));
     expect(screen.getByText("COURTROOM HEARING")).toBeInTheDocument();
-    expect(screen.getByText(/1모둠 · 당사자석/)).toBeInTheDocument();
+    expect(screen.getByText("① 피해")).toBeInTheDocument();
+    expect(screen.getByText("② 약속")).toBeInTheDocument();
+    expect(screen.getByText("③ 책임")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /증거·증언 공개/ }));
     expect(screen.getByText(/축제 무대에서만 보여 주는/)).toBeInTheDocument();

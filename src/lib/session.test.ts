@@ -121,7 +121,7 @@ describe("lesson session helpers", () => {
     expect(snapshot.lessonId).toBe(3);
     expect(snapshot.counts).toEqual({ green: 0, yellow: 1, red: 0 });
     expect(getLessonConfig(3).rounds).toHaveLength(3);
-    expect(courtRound.trial?.roles).toHaveLength(6);
+    expect(courtRound.trial?.checks).toHaveLength(3);
   });
 
   it("returns safe percentages for empty and populated groups", () => {

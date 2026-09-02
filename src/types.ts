@@ -35,18 +35,17 @@ export interface EthicsKey {
   unlockLine: string;
 }
 
-export interface TrialRole {
-  teamId: number;
-  name: string;
-  lens: string;
-  prompt: string;
+export interface TrialCheck {
+  id: "harm" | "promise" | "responsibility";
+  label: string;
+  question: string;
 }
 
 export interface TrialDetails {
   docket: string;
   charge: string;
   tension: [string, string];
-  roles: TrialRole[];
+  checks: TrialCheck[];
   verdictPrompt: string;
   classRule: string;
 }

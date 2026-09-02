@@ -3,7 +3,6 @@ import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { SituationPanel } from "../components/SituationPanel";
 import { TeamBattleBoard } from "../components/TeamBattleBoard";
-import { TrialRoleBoard } from "../components/TrialRoleBoard";
 import { VoteGraph } from "../components/VoteGraph";
 import { getLessonConfig } from "../data/lessons";
 import { connectRoom, hasSupabaseConfig, type RoomConnection, type TransportKind } from "../lib/realtime";
@@ -321,7 +320,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
             className="teacher-action teacher-action--primary"
             onClick={() => updateSession({ status: "discussion", votingEndsAt: Date.now() + 45_000 })}
           >
-            {session.phaseIndex === 0 ? "역할별 심리 시작" : "최종 배심 토의"} <span>⚖</span>
+            {session.phaseIndex === 0 ? "세 질문으로 따져보기" : "최종 판결 회의"} <span>⚖</span>
           </button>
         );
       }
@@ -423,7 +422,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
 
       {!["lobby", "briefing", "key", "complete"].includes(session.status) && (
         <section className={`teacher-stage teacher-stage--${session.status}`}>
-          <div className={lesson.id === 2 || lesson.id === 3 ? "battle-results-column" : "teacher-graph-column"}>
+          <div className={lesson.id === 2 ? "battle-results-column" : "teacher-graph-column"}>
             <VoteGraph
               counts={snapshot.counts}
               previousCounts={snapshot.previousCounts}
@@ -442,14 +441,6 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
                 options={lesson.voteOptions}
               />
             )}
-            {lesson.id === 3 && snapshot.counts && round.trial && (
-              <TrialRoleBoard
-                roles={round.trial.roles}
-                votes={currentPhaseVotes}
-                members={members}
-                options={lesson.voteOptions}
-              />
-            )}
           </div>
           <div className="teacher-case-area">
             <SituationPanel round={round} phase={phase} status={session.status} />
@@ -464,12 +455,12 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
                       <i>VS</i>
                       <strong>{round.trial.tension[1]}</strong>
                     </div>
-                    <div className="trial-hearing-prompts">
-                      {round.trial.roles.map((role) => (
-                        <span key={role.teamId}>
-                          <b>{role.teamId}모둠 · {role.name}</b>
-                          {role.prompt}
-                        </span>
+                    <div className="trial-check-grid">
+                      {round.trial.checks.map((check) => (
+                        <article key={check.id}>
+                          <b>{check.label}</b>
+                          <span>{check.question}</span>
+                        </article>
                       ))}
                     </div>
                     <p className="trial-verdict-prompt">판결문 확인 · {round.trial.verdictPrompt}</p>
