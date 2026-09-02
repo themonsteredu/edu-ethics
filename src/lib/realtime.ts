@@ -40,6 +40,7 @@ function isVoteSubmission(value: unknown): value is VoteSubmission {
   if (!isRecord(value)) return false;
   return (
     typeof value.studentId === "string" &&
+    (value.teamId === undefined || (Number.isInteger(value.teamId) && Number(value.teamId) >= 1 && Number(value.teamId) <= 6)) &&
     typeof value.roundId === "string" &&
     typeof value.phaseId === "string" &&
     (value.choice === "green" || value.choice === "yellow" || value.choice === "red") &&
@@ -61,6 +62,7 @@ function isPublicSnapshot(value: unknown): value is PublicSessionSnapshot {
   );
   return (
     typeof value.roomCode === "string" &&
+    (value.lessonId === undefined || value.lessonId === 1 || value.lessonId === 2) &&
     statuses.has(String(value.status)) &&
     Number.isInteger(value.introIndex) &&
     Number.isInteger(value.roundIndex) &&
@@ -146,6 +148,7 @@ async function connectSupabase(options: ConnectRoomOptions): Promise<RoomConnect
           id: member.id,
           role: member.role,
           nickname: member.nickname,
+          teamId: Number.isInteger(member.teamId) ? member.teamId : undefined,
           onlineAt: member.onlineAt,
           snapshot: isPublicSnapshot(member.snapshot) ? member.snapshot : undefined,
         } satisfies PresenceMember));

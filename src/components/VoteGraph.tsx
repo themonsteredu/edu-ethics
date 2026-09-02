@@ -1,4 +1,4 @@
-import { voteOptions } from "../data/lesson1";
+import { voteOptions } from "../data/lessons";
 import { countTotal, percentage } from "../lib/session";
 import type { ReasonTag, VoteCounts } from "../types";
 

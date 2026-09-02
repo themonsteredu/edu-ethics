@@ -12,13 +12,15 @@ describe("application routes", () => {
     cleanup();
   });
 
-  it("renders the three-lesson home and lesson-one calls to action", () => {
+  it("renders the three-lesson home and both open lesson calls to action", () => {
     window.history.replaceState({}, "", "/");
     render(<App />);
 
     expect(screen.getByRole("heading", { name: /판단이 움직이는 순간/ })).toBeInTheDocument();
     expect(screen.getByText("AI 윤리 밸런스 게임쇼")).toBeInTheDocument();
+    expect(screen.getByText("AI 윤리 딜레마 배틀")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /수업코드로 입장/ })).toHaveAttribute("href", "/join");
+    expect(screen.getAllByRole("link", { name: /교사 수업 열기/ }).some((link) => link.getAttribute("href") === "/teacher?lesson=2")).toBe(true);
   });
 
   it("validates a short classroom code on the student join route", () => {
@@ -56,5 +58,12 @@ describe("application routes", () => {
 
     expect(screen.getByRole("heading", { name: "교사 설정" })).toBeInTheDocument();
     expect(screen.getByLabelText("교사용 비밀번호")).toHaveAttribute("type", "password");
+  });
+
+  it("opens the lesson-two teacher gate from the lesson route", () => {
+    window.history.replaceState({}, "", "/teacher?lesson=2");
+    render(<App />);
+
+    expect(screen.getByText(/2차시 수업 생성/)).toBeInTheDocument();
   });
 });

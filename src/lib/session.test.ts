@@ -9,6 +9,7 @@ import {
   voteKey,
 } from "./session";
 import type { VoteSubmission } from "../types";
+import { getLessonConfig } from "../data/lessons";
 
 const votes: VoteSubmission[] = [
   {
@@ -66,6 +67,34 @@ describe("lesson session helpers", () => {
       transport: "classroom-demo",
     });
     expect(revealed.counts).toEqual({ green: 2, yellow: 1, red: 0 });
+  });
+
+  it("creates and aggregates a lesson-two battle room independently", () => {
+    const battleSession = createInitialSession("BATTLE2", 2);
+    battleSession.status = "results";
+    const battleRound = getLessonConfig(2).rounds[0];
+    const battleVotes: VoteSubmission[] = [
+      {
+        studentId: "team-1-a",
+        teamId: 1,
+        roundId: battleRound.id,
+        phaseId: battleRound.phases[0].id,
+        choice: "yellow",
+        reasonId: battleRound.phases[0].suggestedReasonTags[0].id,
+        submittedAt: 1,
+      },
+    ];
+
+    const snapshot = buildPublicSnapshot({
+      session: battleSession,
+      votes: battleVotes,
+      connectedStudents: 1,
+      transport: "classroom-demo",
+    });
+
+    expect(snapshot.lessonId).toBe(2);
+    expect(snapshot.counts).toEqual({ green: 0, yellow: 1, red: 0 });
+    expect(getLessonConfig(snapshot.lessonId).rounds).toHaveLength(4);
   });
 
   it("returns safe percentages for empty and populated groups", () => {

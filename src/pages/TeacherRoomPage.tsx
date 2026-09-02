@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { SituationPanel } from "../components/SituationPanel";
+import { TeamBattleBoard } from "../components/TeamBattleBoard";
 import { VoteGraph } from "../components/VoteGraph";
-import { introSlides, lesson1Rounds } from "../data/lesson1";
+import { getLessonConfig } from "../data/lessons";
 import { connectRoom, hasSupabaseConfig, type RoomConnection, type TransportKind } from "../lib/realtime";
 import {
   buildPublicSnapshot,
@@ -11,6 +12,7 @@ import {
   createInitialSession,
   createRoomCode,
   voteKey,
+  votesForPhase,
 } from "../lib/session";
 import {
   clearTeacherRoom,
@@ -19,7 +21,7 @@ import {
   saveTeacherSession,
   saveTeacherVotes,
 } from "../lib/storage";
-import type { PresenceMember, PublicSessionSnapshot, RoomEvent, TeacherSession, VoteSubmission } from "../types";
+import type { LessonId, PresenceMember, PublicSessionSnapshot, RoomEvent, TeacherSession, VoteSubmission } from "../types";
 
 const TEACHER_ID_KEY = "edu-ethics:teacher-id";
 
@@ -31,22 +33,26 @@ function getTeacherId(): string {
   return id;
 }
 
-function sessionIsUsable(session: TeacherSession | null): session is TeacherSession {
+function sessionIsUsable(session: TeacherSession | null, lessonId: LessonId, roundCount: number): session is TeacherSession {
   return Boolean(
     session &&
       session.roomCode &&
+      (session.lessonId ?? 1) === lessonId &&
       session.roundIndex >= 0 &&
-      session.roundIndex < lesson1Rounds.length,
+      session.roundIndex < roundCount,
   );
 }
 
-export function TeacherRoomPage() {
+export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
+  const lesson = getLessonConfig(lessonId);
   const teacherId = useMemo(getTeacherId, []);
   const [session, setSession] = useState<TeacherSession>(() => {
-    const saved = loadTeacherSession();
-    return sessionIsUsable(saved) ? saved : createInitialSession(createRoomCode());
+    const saved = loadTeacherSession(lessonId);
+    return sessionIsUsable(saved, lessonId, lesson.rounds.length)
+      ? { ...saved, lessonId }
+      : createInitialSession(createRoomCode(), lessonId);
   });
-  const [votes, setVotes] = useState<VoteSubmission[]>(loadTeacherVotes);
+  const [votes, setVotes] = useState<VoteSubmission[]>(() => loadTeacherVotes(lessonId));
   const [members, setMembers] = useState<PresenceMember[]>([]);
   const [connection, setConnection] = useState<RoomConnection | null>(null);
   const [transport, setTransport] = useState<TransportKind>(
@@ -71,18 +77,22 @@ export function TeacherRoomPage() {
     [session, votes, connectedStudents, transport],
   );
 
-  const round = lesson1Rounds[session.roundIndex] ?? lesson1Rounds[0];
+  const round = lesson.rounds[session.roundIndex] ?? lesson.rounds[0];
   const phase = round.phases[session.phaseIndex] ?? round.phases[0];
-  const joinUrl = `${window.location.origin}/join?room=${session.roomCode}`;
+  const joinUrl = `${window.location.origin}/join?room=${session.roomCode}&lesson=${lesson.id}`;
+  const currentPhaseVotes = votesForPhase(votes, round.id, phase.id);
+  const previousPhaseVotes = session.phaseIndex > 0
+    ? votesForPhase(votes, round.id, round.phases[session.phaseIndex - 1].id)
+    : [];
 
   useEffect(() => {
     sessionRef.current = session;
-    saveTeacherSession(session);
-  }, [session]);
+    saveTeacherSession(session, lessonId);
+  }, [session, lessonId]);
 
   useEffect(() => {
-    saveTeacherVotes(votes);
-  }, [votes]);
+    saveTeacherVotes(votes, lessonId);
+  }, [votes, lessonId]);
 
   const handleRoomEvent = useCallback((event: RoomEvent) => {
     if (event.kind === "state-request") {
@@ -103,7 +113,7 @@ export function TeacherRoomPage() {
 
     if (event.kind !== "vote-submit") return;
     const currentSession = sessionRef.current;
-    const currentRound = lesson1Rounds[currentSession.roundIndex];
+    const currentRound = lesson.rounds[currentSession.roundIndex];
     const currentPhase = currentRound?.phases[currentSession.phaseIndex];
     if (
       currentSession.status !== "voting" ||
@@ -132,7 +142,7 @@ export function TeacherRoomPage() {
       setConnectionIssue("학생 화면과 다시 연결하고 있습니다.");
       setRetryVersion((value) => value + 1);
     });
-  }, [teacherId]);
+  }, [teacherId, lesson]);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,7 +245,7 @@ export function TeacherRoomPage() {
   };
 
   const nextRound = () => {
-    if (session.roundIndex >= lesson1Rounds.length - 1) {
+    if (session.roundIndex >= lesson.rounds.length - 1) {
       updateSession({ status: "complete", votingEndsAt: null });
       return;
     }
@@ -247,9 +257,9 @@ export function TeacherRoomPage() {
 
   const newRoom = () => {
     if (!window.confirm("현재 수업 결과를 닫고 새 수업코드를 만들까요?")) return;
-    clearTeacherRoom();
+    clearTeacherRoom(lessonId);
     setVotes([]);
-    setSession(createInitialSession(createRoomCode()));
+    setSession(createInitialSession(createRoomCode(), lessonId));
   };
 
   const copyJoinInfo = async () => {
@@ -271,7 +281,7 @@ export function TeacherRoomPage() {
       );
     }
     if (session.status === "briefing") {
-      const isLast = session.introIndex === introSlides.length - 1;
+      const isLast = session.introIndex === lesson.introSlides.length - 1;
       return (
         <button
           className="teacher-action teacher-action--primary"
@@ -294,6 +304,16 @@ export function TeacherRoomPage() {
       );
     }
     if (session.status === "results") {
+      if (lesson.id === 2) {
+        return (
+          <button
+            className="teacher-action teacher-action--primary"
+            onClick={() => updateSession({ status: "discussion", votingEndsAt: Date.now() + 30_000 })}
+          >
+            30초 변론 시작 <span>⚔</span>
+          </button>
+        );
+      }
       if (session.phaseIndex < round.phases.length - 1) {
         return (
           <button className="teacher-action teacher-action--alert" onClick={() => beginVote({ phaseIndex: session.phaseIndex + 1 })}>
@@ -308,16 +328,23 @@ export function TeacherRoomPage() {
       );
     }
     if (session.status === "discussion") {
+      if (lesson.id === 2 && session.phaseIndex < round.phases.length - 1) {
+        return (
+          <button className="teacher-action teacher-action--alert" onClick={() => beginVote({ phaseIndex: session.phaseIndex + 1 })}>
+            조건 카드 공개 · 재판정 <span>!</span>
+          </button>
+        );
+      }
       return (
         <button className="teacher-action teacher-action--key" onClick={revealKey}>
-          윤리 열쇠 해제 <span>◆</span>
+          {lesson.id === 2 ? "판정 원칙 정리" : "윤리 열쇠 해제"} <span>◆</span>
         </button>
       );
     }
     if (session.status === "key") {
       return (
         <button className="teacher-action teacher-action--primary" onClick={nextRound}>
-          {session.roundIndex === lesson1Rounds.length - 1 ? "최종 결과 보기" : "다음 사건으로"} <span>→</span>
+          {session.roundIndex === lesson.rounds.length - 1 ? "최종 결과 보기" : "다음 사건으로"} <span>→</span>
         </button>
       );
     }
@@ -329,7 +356,7 @@ export function TeacherRoomPage() {
   };
 
   return (
-    <main className={`teacher-page teacher-page--${session.status}`}>
+    <main className={`teacher-page teacher-page--lesson-${lesson.id} teacher-page--${session.status}`}>
       <header className="teacher-header">
         <Brand compact />
         <div className="teacher-room-meta">
@@ -354,9 +381,9 @@ export function TeacherRoomPage() {
       {session.status === "lobby" && (
         <section className="teacher-lobby">
           <div className="lobby-copy">
-            <span className="eyebrow">LESSON 01 · LIVE CLASS</span>
-            <h1>AI 윤리 밸런스 게임쇼</h1>
-            <p>학생들이 입장하면 오프닝을 시작하세요. 결과는 모든 학생이 먼저 판정할 때까지 공개되지 않습니다.</p>
+            <span className="eyebrow">{lesson.eyebrow}</span>
+            <h1>{lesson.title}</h1>
+            <p>{lesson.lobbyGuide}</p>
           </div>
           <div className="lobby-code-panel">
             <span>학생 입장</span>
@@ -371,35 +398,59 @@ export function TeacherRoomPage() {
       {session.status === "briefing" && (
         <section className="briefing-screen">
           <div className="briefing-progress">
-            {introSlides.map((_, index) => <i className={index <= session.introIndex ? "is-active" : ""} key={index} />)}
+            {lesson.introSlides.map((_, index) => <i className={index <= session.introIndex ? "is-active" : ""} key={index} />)}
           </div>
           <div className="briefing-number">0{session.introIndex + 1}</div>
           <div className="briefing-copy">
-            <span className="eyebrow">{introSlides[session.introIndex].eyebrow}</span>
-            <h1>{introSlides[session.introIndex].title}</h1>
-            <p>{introSlides[session.introIndex].body}</p>
-            <blockquote>{introSlides[session.introIndex].prompt}</blockquote>
+            <span className="eyebrow">{lesson.introSlides[session.introIndex].eyebrow}</span>
+            <h1>{lesson.introSlides[session.introIndex].title}</h1>
+            <p>{lesson.introSlides[session.introIndex].body}</p>
+            <blockquote>{lesson.introSlides[session.introIndex].prompt}</blockquote>
           </div>
         </section>
       )}
 
       {!["lobby", "briefing", "key", "complete"].includes(session.status) && (
         <section className={`teacher-stage teacher-stage--${session.status}`}>
-          <VoteGraph
-            counts={snapshot.counts}
-            previousCounts={snapshot.previousCounts}
-            responseCount={snapshot.responseCount}
-            connectedStudents={connectedStudents}
-            reasonCounts={snapshot.reasonCounts}
-            reasonTags={phase.suggestedReasonTags}
-          />
+          <div className={lesson.id === 2 ? "battle-results-column" : "teacher-graph-column"}>
+            <VoteGraph
+              counts={snapshot.counts}
+              previousCounts={snapshot.previousCounts}
+              responseCount={snapshot.responseCount}
+              connectedStudents={connectedStudents}
+              reasonCounts={snapshot.reasonCounts}
+              reasonTags={phase.suggestedReasonTags}
+            />
+            {lesson.id === 2 && snapshot.counts && (
+              <TeamBattleBoard
+                currentVotes={currentPhaseVotes}
+                previousVotes={previousPhaseVotes}
+                members={members}
+              />
+            )}
+          </div>
           <div className="teacher-case-area">
             <SituationPanel round={round} phase={phase} status={session.status} />
             {session.status === "discussion" && (
-              <div className="discussion-card">
-                <span>ETHICS DEBATE</span>
+              <div className={`discussion-card ${lesson.id === 2 ? "discussion-card--battle" : ""}`}>
+                <span>{lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
                 <h2>{round.discussionPrompt}</h2>
-                <p>서로 다른 판정을 고른 학생의 이유를 한 명씩 들어보세요.</p>
+                {lesson.id === 2 && round.battle ? (
+                  <>
+                    <div className="battle-tension">
+                      <strong>{round.battle.tension[0]}</strong>
+                      <i>VS</i>
+                      <strong>{round.battle.tension[1]}</strong>
+                    </div>
+                    <div className="battle-stance-prompts">
+                      <span className="green"><b>GO</b>{round.battle.stancePrompts.green}</span>
+                      <span className="yellow"><b>WAIT</b>{round.battle.stancePrompts.yellow}</span>
+                      <span className="red"><b>STOP</b>{round.battle.stancePrompts.red}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p>서로 다른 판정을 고른 학생의 이유를 한 명씩 들어보세요.</p>
+                )}
               </div>
             )}
           </div>
@@ -410,11 +461,11 @@ export function TeacherRoomPage() {
         <section className="key-reveal-screen">
           <div className="key-reveal-screen__index">KEY {String(session.roundIndex + 1).padStart(2, "0")}</div>
           <div className="ethics-key-symbol" aria-hidden="true"><span>◆</span></div>
-          <span className="eyebrow">오늘의 윤리 열쇠 획득</span>
+          <span className="eyebrow">{lesson.id === 2 ? "이번 사건의 판정 원칙" : "오늘의 윤리 열쇠 획득"}</span>
           <h1>{round.ethicsKey.name}</h1>
           <p>{round.ethicsKey.unlockLine}</p>
           <div className="key-progress">
-            {lesson1Rounds.map((item) => (
+            {lesson.rounds.map((item) => (
               <span className={session.unlockedKeyIds.includes(item.ethicsKey.id) ? "is-unlocked" : ""} key={item.id}>
                 {item.ethicsKey.name}
               </span>
@@ -425,10 +476,10 @@ export function TeacherRoomPage() {
 
       {session.status === "complete" && (
         <section className="complete-screen">
-          <span className="eyebrow">LESSON 01 COMPLETE</span>
-          <h1>우리 반은 다섯 가지 판단 기준을 발견했습니다.</h1>
+          <span className="eyebrow">LESSON 0{lesson.id} COMPLETE</span>
+          <h1>{lesson.completionTitle}</h1>
           <div className="complete-keys">
-            {lesson1Rounds.map((item, index) => (
+            {lesson.rounds.map((item, index) => (
               <article key={item.id}>
                 <span>0{index + 1}</span>
                 <strong>{item.ethicsKey.name}</strong>
@@ -436,13 +487,13 @@ export function TeacherRoomPage() {
               </article>
             ))}
           </div>
-          <blockquote>AI를 사용할 때 우리 반이 꼭 지켜야 할 규칙 한 가지는 무엇인가요?</blockquote>
+          <blockquote>{lesson.completionPrompt}</blockquote>
         </section>
       )}
 
       <footer className="teacher-controls">
         <div className="round-progress" aria-label="사건 진행도">
-          {lesson1Rounds.map((item, index) => (
+          {lesson.rounds.map((item, index) => (
             <span className={index < session.roundIndex ? "is-done" : index === session.roundIndex ? "is-current" : ""} key={item.id}>
               {index + 1}
             </span>

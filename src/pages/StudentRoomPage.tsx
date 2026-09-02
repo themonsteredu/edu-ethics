@@ -3,7 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { SignalVote } from "../components/SignalVote";
-import { introSlides, lesson1Rounds, voteOptions } from "../data/lesson1";
+import { getLessonConfig, voteOptions } from "../data/lessons";
 import { connectRoom, type RoomConnection, type TransportKind } from "../lib/realtime";
 import { normalizeRoomCodeInput } from "../lib/session";
 import { loadStudentProfile } from "../lib/storage";
@@ -29,10 +29,11 @@ export function StudentRoomPage() {
   const pendingReceiptRef = useRef<string | null>(null);
   const voteAckTimerRef = useRef<number | null>(null);
 
-  const round = snapshot ? lesson1Rounds[snapshot.roundIndex] : null;
+  const lesson = getLessonConfig(snapshot?.lessonId);
+  const round = snapshot ? lesson.rounds[snapshot.roundIndex] : null;
   const phase = round && snapshot ? round.phases[snapshot.phaseIndex] : null;
-  const introSlide = snapshot ? introSlides[snapshot.introIndex] ?? introSlides[0] : null;
-  const phaseKey = round && phase ? `${round.id}:${phase.id}` : "waiting";
+  const introSlide = snapshot ? lesson.introSlides[snapshot.introIndex] ?? lesson.introSlides[0] : null;
+  const phaseKey = round && phase ? `${lesson.id}:${round.id}:${phase.id}` : "waiting";
 
   useEffect(() => {
     pendingReceiptRef.current = null;
@@ -60,6 +61,7 @@ export function StudentRoomPage() {
       id: profile.studentId,
       role: "student",
       nickname: profile.nickname,
+      teamId: profile.teamId ?? 1,
       onlineAt: Date.now(),
     };
 
@@ -179,6 +181,7 @@ export function StudentRoomPage() {
         receiptId,
         vote: {
           studentId: profile.studentId,
+          teamId: profile.teamId ?? 1,
           roundId: round.id,
           phaseId: phase.id,
           choice,
@@ -207,11 +210,11 @@ export function StudentRoomPage() {
   };
 
   return (
-    <main className={`student-page student-page--${snapshot?.status ?? "connecting"}`}>
+    <main className={`student-page student-page--lesson-${lesson.id} student-page--${snapshot?.status ?? "connecting"}`}>
       <header className="student-header">
         <Brand compact />
         <div className="student-header__meta">
-          <span>{profile.nickname} 판정관</span>
+          <span>{profile.nickname} · {profile.teamId ?? 1}모둠</span>
           <strong>{requestedRoom}</strong>
           <i
             className={connection && !connectionIssue ? "is-online" : connectionIssue ? "is-error" : ""}
@@ -258,11 +261,11 @@ export function StudentRoomPage() {
       {snapshot?.status === "lobby" && (
         <section className="student-lobby">
           <div className="student-pass">
-            <span>AI ETHICS JUDGE</span>
+            <span>{lesson.id === 2 ? "AI ETHICS BATTLER" : "AI ETHICS JUDGE"}</span>
             <strong>{profile.nickname}</strong>
-            <small>ROOM {requestedRoom}</small>
+            <small>{profile.teamId ?? 1}모둠 · ROOM {requestedRoom}</small>
           </div>
-          <h1>판정관 등록 완료</h1>
+          <h1>{lesson.id === 2 ? "배틀러 등록 완료" : "판정관 등록 완료"}</h1>
           <p>교사가 수업을 시작할 때까지 전면 화면을 봐 주세요.</p>
           <div className="waiting-dots"><i /><i /><i /></div>
         </section>
@@ -324,7 +327,7 @@ export function StudentRoomPage() {
           </div>
           <h1>우리 반 결과는 전면 화면에서 확인하세요.</h1>
           {snapshot.phaseIndex < round.phases.length - 1 ? (
-            <p>잠시 후 새로운 조건이 공개됩니다. 판단을 바꿔도 괜찮아요.</p>
+            <p>{lesson.id === 2 ? "전면 화면을 보며 30초 변론을 준비하세요." : "잠시 후 새로운 조건이 공개됩니다. 판단을 바꿔도 괜찮아요."}</p>
           ) : (
             <p>다른 선택을 한 친구의 이유를 들어볼 준비를 하세요.</p>
           )}
@@ -333,35 +336,49 @@ export function StudentRoomPage() {
 
       {snapshot && round && snapshot.status === "discussion" && (
         <section className="student-discussion">
-          <span className="eyebrow">ETHICS DEBATE</span>
-          <h1>{round.discussionPrompt}</h1>
-          <div className="debate-signals">
-            <span className="green">괜찮다</span>
-            <i>VS</i>
-            <span className="red">안 된다</span>
-          </div>
-          <p>내 판정을 말할 때 사건 속 조건을 근거로 설명해 보세요.</p>
+          <span className="eyebrow">{lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
+          <h1>{lesson.id === 2 && round.battle && choice ? round.battle.stancePrompts[choice] : round.discussionPrompt}</h1>
+          {lesson.id === 2 && round.battle ? (
+            <>
+              <div className="student-team-badge">{profile.teamId ?? 1}모둠 · {voteOptions.find((option) => option.id === choice)?.signal ?? "READY"}</div>
+              <div className="student-battle-tension">
+                <span>{round.battle.tension[0]}</span>
+                <i>VS</i>
+                <span>{round.battle.tension[1]}</span>
+              </div>
+              <p>“우리 모둠은 …입니다. 왜냐하면 …이기 때문입니다.”로 말해 보세요.</p>
+            </>
+          ) : (
+            <>
+              <div className="debate-signals">
+                <span className="green">괜찮다</span>
+                <i>VS</i>
+                <span className="red">안 된다</span>
+              </div>
+              <p>내 판정을 말할 때 사건 속 조건을 근거로 설명해 보세요.</p>
+            </>
+          )}
         </section>
       )}
 
       {snapshot && round && snapshot.status === "key" && (
         <section className="student-key">
           <div className="student-key__symbol" aria-hidden="true">◆</div>
-          <span className="eyebrow">ETHICS KEY UNLOCKED</span>
+          <span className="eyebrow">{lesson.id === 2 ? "BATTLE PRINCIPLE" : "ETHICS KEY UNLOCKED"}</span>
           <h1>{round.ethicsKey.name}</h1>
           <p>{round.ethicsKey.unlockLine}</p>
-          <div className="student-key__count">{snapshot.unlockedKeyIds.length} / {lesson1Rounds.length}</div>
+          <div className="student-key__count">{snapshot.unlockedKeyIds.length} / {lesson.rounds.length}</div>
         </section>
       )}
 
       {snapshot?.status === "complete" && (
         <section className="student-complete">
           <span className="eyebrow">MISSION COMPLETE</span>
-          <h1>AI 윤리 판정관 1차시 완료</h1>
+          <h1>{lesson.title} 완료</h1>
           <div className="student-complete__keys">
-            {lesson1Rounds.map((item) => <span key={item.id}>{item.ethicsKey.name}</span>)}
+            {lesson.rounds.map((item) => <span key={item.id}>{item.ethicsKey.name}</span>)}
           </div>
-          <blockquote>AI를 사용할 때 내가 꼭 지킬 규칙 한 가지를 생각해 보세요.</blockquote>
+          <blockquote>{lesson.completionPrompt}</blockquote>
           <Link to="/">처음 화면으로</Link>
         </section>
       )}

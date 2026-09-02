@@ -10,6 +10,7 @@ describe("realtime event validation", () => {
       receiptId: "vote-1",
       vote: {
         studentId: "student-1",
+        teamId: 2,
         roundId: "round-1",
         phaseId: "phase-1",
         choice: "yellow",

@@ -60,6 +60,7 @@ let studentPresenceCount = 0;
 const teacherSnapshot = {
   roomCode: room.replace("ethics-smoke-", "").slice(-6).toUpperCase(),
   status: "lobby",
+  lessonId: 2,
   introIndex: 0,
   roundIndex: 0,
   phaseIndex: 0,
@@ -126,7 +127,7 @@ try {
   await Promise.all([subscribe(teacherChannel), subscribe(studentChannel)]);
   const trackResults = await Promise.all([
     teacherChannel.track({ id: "teacher-smoke", role: "teacher", onlineAt: Date.now() }),
-    studentChannel.track({ id: "student-smoke", role: "student", onlineAt: Date.now() }),
+    studentChannel.track({ id: "student-smoke", role: "student", teamId: 3, onlineAt: Date.now() }),
   ]);
   trackResults.forEach((result) => expectOk(result, "presence track"));
 
@@ -146,7 +147,7 @@ try {
     "Student did not receive the teacher classroom snapshot",
   );
   if (teacherReplyError) throw teacherReplyError;
-  if (receivedSnapshot.roomCode !== teacherSnapshot.roomCode || receivedSnapshot.status !== "lobby") {
+  if (receivedSnapshot.roomCode !== teacherSnapshot.roomCode || receivedSnapshot.status !== "lobby" || receivedSnapshot.lessonId !== 2) {
     throw new Error("Teacher snapshot did not match the requested classroom");
   }
 
@@ -160,7 +161,8 @@ try {
       receiptId: "smoke-receipt",
       vote: {
         studentId: "student-smoke",
-        roundId: "consent-dance-video",
+        teamId: 3,
+        roundId: "battle-homework-helper",
         phaseId: "initial",
         choice: "yellow",
         reasonId: "permission",
@@ -170,7 +172,7 @@ try {
   }), "vote-submit send");
 
   await waitFor(() => Boolean(receivedVote), "Teacher did not receive the student vote");
-  if (receivedVote.studentId !== "student-smoke" || receivedVote.choice !== "yellow") {
+  if (receivedVote.studentId !== "student-smoke" || receivedVote.teamId !== 3 || receivedVote.choice !== "yellow") {
     throw new Error("Vote payload did not match the student submission");
   }
   await waitFor(

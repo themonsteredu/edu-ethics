@@ -10,6 +10,7 @@ export function JoinPage() {
   const saved = loadStudentProfile();
   const [roomCode, setRoomCode] = useState(() => normalizeRoomCodeInput(searchParams.get("room") ?? ""));
   const [nickname, setNickname] = useState(saved?.nickname ?? "");
+  const [teamId, setTeamId] = useState(saved?.teamId ?? 1);
   const [error, setError] = useState("");
 
   const submit = (event: FormEvent) => {
@@ -30,6 +31,7 @@ export function JoinPage() {
       roomCode: normalizedCode,
       nickname: cleanNickname,
       studentId: saved?.studentId ?? createClientId("student"),
+      teamId,
     };
     saveStudentProfile(profile);
     navigate(`/play?room=${normalizedCode}`);
@@ -70,6 +72,12 @@ export function JoinPage() {
                 maxLength={10}
                 placeholder="예: 민지"
               />
+            </label>
+            <label>
+              <span>내 모둠</span>
+              <select value={teamId} onChange={(event) => setTeamId(Number(event.target.value))}>
+                {[1, 2, 3, 4, 5, 6].map((team) => <option value={team} key={team}>{team}모둠</option>)}
+              </select>
             </label>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button--primary button--wide" type="submit">

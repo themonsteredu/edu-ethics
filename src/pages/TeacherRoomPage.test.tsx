@@ -1,0 +1,45 @@
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { TeacherRoomPage } from "./TeacherRoomPage";
+
+vi.mock("../lib/realtime", () => ({
+  hasSupabaseConfig: () => false,
+  connectRoom: async ({ roomCode }: { roomCode: string }) => ({
+    kind: "classroom-demo" as const,
+    roomCode,
+    send: async () => undefined,
+    updatePresence: async () => undefined,
+    disconnect: async () => undefined,
+  }),
+}));
+
+describe("lesson two teacher flow", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  afterEach(() => cleanup());
+
+  it("moves from briefing through first vote, debate, and condition card", () => {
+    render(<MemoryRouter><TeacherRoomPage lessonId={2} /></MemoryRouter>);
+
+    expect(screen.getByRole("heading", { name: "AI 윤리 딜레마 배틀" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /오프닝 시작/ }));
+    expect(screen.getByRole("heading", { name: /오늘은 선택보다/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
+    fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
+    fireEvent.click(screen.getByRole("button", { name: /첫 사건 공개/ }));
+    expect(screen.getByRole("heading", { name: "AI가 완성한 독서감상문" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /투표 마감/ }));
+    expect(screen.getByText("모둠별 판정")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /30초 변론 시작/ }));
+    expect(screen.getByText("30 SECOND TEAM BATTLE")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /조건 카드 공개/ }));
+    expect(screen.getByText(/마지막 글은 자기 말로 다시 써야 한다/)).toBeInTheDocument();
+  });
+});

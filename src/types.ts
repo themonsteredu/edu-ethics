@@ -1,4 +1,5 @@
 export type VoteChoice = "green" | "yellow" | "red";
+export type LessonId = 1 | 2;
 
 export type SessionStatus =
   | "lobby"
@@ -38,6 +39,11 @@ export interface EthicsRound {
   ethicsKey: EthicsKey;
   teacherFacilitationNote: string;
   expectedMovement: string;
+  battle?: {
+    tension: [string, string];
+    stancePrompts: Record<VoteChoice, string>;
+    debriefPrompt: string;
+  };
 }
 
 export interface VoteCounts {
@@ -48,6 +54,7 @@ export interface VoteCounts {
 
 export interface VoteSubmission {
   studentId: string;
+  teamId?: number;
   roundId: string;
   phaseId: string;
   choice: VoteChoice;
@@ -57,6 +64,7 @@ export interface VoteSubmission {
 
 export interface TeacherSession {
   roomCode: string;
+  lessonId?: LessonId;
   status: SessionStatus;
   introIndex: number;
   roundIndex: number;
@@ -106,6 +114,7 @@ export interface PresenceMember {
   id: string;
   role: "teacher" | "student";
   nickname?: string;
+  teamId?: number;
   onlineAt: number;
   snapshot?: PublicSessionSnapshot;
 }

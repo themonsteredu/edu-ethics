@@ -1,4 +1,4 @@
-import type { TeacherSession, VoteSubmission } from "../types";
+import type { LessonId, TeacherSession, VoteSubmission } from "../types";
 
 const TEACHER_SESSION_KEY = "edu-ethics:teacher-session:v1";
 const TEACHER_VOTES_KEY = "edu-ethics:teacher-votes:v1";
@@ -13,31 +13,36 @@ function readJson<T>(key: string): T | null {
   }
 }
 
-export function loadTeacherSession(): TeacherSession | null {
-  return readJson<TeacherSession>(TEACHER_SESSION_KEY);
+function lessonStorageKey(base: string, lessonId: LessonId): string {
+  return lessonId === 1 ? base : `${base}:lesson-${lessonId}`;
 }
 
-export function saveTeacherSession(session: TeacherSession): void {
-  localStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify(session));
+export function loadTeacherSession(lessonId: LessonId = 1): TeacherSession | null {
+  return readJson<TeacherSession>(lessonStorageKey(TEACHER_SESSION_KEY, lessonId));
 }
 
-export function loadTeacherVotes(): VoteSubmission[] {
-  return readJson<VoteSubmission[]>(TEACHER_VOTES_KEY) ?? [];
+export function saveTeacherSession(session: TeacherSession, lessonId: LessonId = 1): void {
+  localStorage.setItem(lessonStorageKey(TEACHER_SESSION_KEY, lessonId), JSON.stringify(session));
 }
 
-export function saveTeacherVotes(votes: VoteSubmission[]): void {
-  localStorage.setItem(TEACHER_VOTES_KEY, JSON.stringify(votes));
+export function loadTeacherVotes(lessonId: LessonId = 1): VoteSubmission[] {
+  return readJson<VoteSubmission[]>(lessonStorageKey(TEACHER_VOTES_KEY, lessonId)) ?? [];
 }
 
-export function clearTeacherRoom(): void {
-  localStorage.removeItem(TEACHER_SESSION_KEY);
-  localStorage.removeItem(TEACHER_VOTES_KEY);
+export function saveTeacherVotes(votes: VoteSubmission[], lessonId: LessonId = 1): void {
+  localStorage.setItem(lessonStorageKey(TEACHER_VOTES_KEY, lessonId), JSON.stringify(votes));
+}
+
+export function clearTeacherRoom(lessonId: LessonId = 1): void {
+  localStorage.removeItem(lessonStorageKey(TEACHER_SESSION_KEY, lessonId));
+  localStorage.removeItem(lessonStorageKey(TEACHER_VOTES_KEY, lessonId));
 }
 
 export interface StudentProfile {
   roomCode: string;
   nickname: string;
   studentId: string;
+  teamId: number;
 }
 
 export function loadStudentProfile(): StudentProfile | null {

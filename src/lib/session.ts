@@ -1,5 +1,6 @@
-import { lesson1Rounds } from "../data/lesson1";
+import { getLessonConfig } from "../data/lessons";
 import type {
+  LessonId,
   PublicSessionSnapshot,
   TeacherSession,
   VoteCounts,
@@ -37,9 +38,10 @@ export function createClientId(prefix: "teacher" | "student"): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
-export function createInitialSession(roomCode: string): TeacherSession {
+export function createInitialSession(roomCode: string, lessonId: LessonId = 1): TeacherSession {
   return {
     roomCode,
+    lessonId,
     status: "lobby",
     introIndex: 0,
     roundIndex: 0,
@@ -93,7 +95,8 @@ export function buildPublicSnapshot({
   connectedStudents: number;
   transport: PublicSessionSnapshot["transport"];
 }): PublicSessionSnapshot {
-  const round = lesson1Rounds[session.roundIndex] ?? lesson1Rounds[0];
+  const lesson = getLessonConfig(session.lessonId);
+  const round = lesson.rounds[session.roundIndex] ?? lesson.rounds[0];
   const phase = round.phases[session.phaseIndex] ?? round.phases[0];
   const currentVotes = votesForPhase(votes, round.id, phase.id);
   const canReveal = ["results", "discussion", "key", "complete"].includes(session.status);
@@ -105,6 +108,7 @@ export function buildPublicSnapshot({
 
   return {
     ...session,
+    lessonId: lesson.id,
     connectedStudents,
     responseCount: currentVotes.length,
     counts: canReveal ? aggregateVotes(currentVotes) : null,

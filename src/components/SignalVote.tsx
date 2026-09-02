@@ -1,4 +1,4 @@
-import { voteOptions } from "../data/lesson1";
+import { voteOptions } from "../data/lessons";
 import type { ReasonTag, VoteChoice } from "../types";
 
 interface SignalVoteProps {
