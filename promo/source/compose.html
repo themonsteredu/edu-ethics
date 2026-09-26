@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>AI 윤리 판정소 홍보영상</title>
+<style>
+:root{--bg:#111b2e;--bg2:#0c1424;--ink:#fffdf7;--mute:#9aa6bb;--acid:#ffe36c;--green:#1dc98a;--yellow:#f4c84d;--red:#ff655f;--blue:#6f8cff;--paper:#f4f1e8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Pretendard",sans-serif;letter-spacing:-0.02em}
+.stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(1200px 700px at 85% 15%,#1d2b48 0%,transparent 60%),radial-gradient(900px 600px at 5% 95%,#1a2440 0%,transparent 60%),var(--bg)}
+.grid{position:absolute;inset:-100px;background-image:linear-gradient(rgba(255,227,108,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,227,108,.045) 1px,transparent 1px);background-size:80px 80px}
+.scene{position:absolute;inset:0;opacity:0}
+.a{will-change:transform,opacity}
+/* hero */
+.hero .txt{position:absolute;left:140px;top:250px;width:1060px}
+.eyebrow{font-size:30px;font-weight:600;color:var(--acid);letter-spacing:.04em;margin-bottom:28px;display:flex;align-items:center;gap:16px}
+.eyebrow::before{content:"";width:44px;height:3px;background:var(--acid);display:block}
+.big{font-size:100px;font-weight:800;line-height:1.14;letter-spacing:-0.045em}
+.big em{font-style:normal;color:var(--acid)}
+.sub{font-size:38px;font-weight:500;color:#d5dbe6;margin-top:34px;line-height:1.45}
+.signal{position:absolute;left:1300px;top:170px;width:440px;height:640px;border-radius:60px;background:linear-gradient(160deg,#1f2b45,#0d1527);border:2px solid rgba(255,255,255,.08);box-shadow:0 60px 140px rgba(0,0,0,.5);display:flex;flex-direction:column;justify-content:space-around;align-items:center;padding:40px 0}
+.signal i{display:block;width:150px;height:150px;border-radius:50%;background:#2a3550;position:relative}
+.signal i span{position:absolute;inset:0;border-radius:50%;opacity:0}
+.signal i:nth-child(1) span{background:var(--red);box-shadow:0 0 90px var(--red)}
+.signal i:nth-child(2) span{background:var(--yellow);box-shadow:0 0 90px var(--yellow)}
+.signal i:nth-child(3) span{background:var(--green);box-shadow:0 0 90px var(--green)}
+.signal b{position:absolute;right:-170px;font-size:30px;font-weight:800;letter-spacing:.08em;opacity:0}
+/* window scenes */
+.cap{position:absolute;left:100px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center}
+.cap .num{font-size:26px;font-weight:700;color:var(--acid);letter-spacing:.08em;margin-bottom:22px}
+.cap h2{font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-0.045em}
+.cap h2 em{font-style:normal;color:var(--acid)}
+.cap p{font-size:31px;font-weight:500;color:#c3cbd9;line-height:1.5;margin-top:30px}
+.chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.chip{font-size:24px;font-weight:700;padding:10px 20px;border-radius:999px;border:1.5px solid rgba(255,227,108,.5);color:var(--acid);background:rgba(255,227,108,.07)}
+.chip.g{border-color:rgba(29,201,138,.6);color:var(--green);background:rgba(29,201,138,.08)}
+.chip.y{border-color:rgba(244,200,77,.6);color:var(--yellow);background:rgba(244,200,77,.08)}
+.chip.r{border-color:rgba(255,101,95,.6);color:var(--red);background:rgba(255,101,95,.08)}
+.win{position:absolute;left:720px;top:176px;width:1110px;border-radius:22px;overflow:hidden;background:#0c1424;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 40px 120px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4)}
+.win .bar{height:52px;display:flex;align-items:center;gap:10px;padding:0 22px;background:#1a2438;border-bottom:1px solid rgba(255,255,255,.08)}
+.win .bar i{width:14px;height:14px;border-radius:50%;background:#3a4661;display:block}
+.win .bar span{margin-left:22px;flex:1;height:32px;border-radius:9px;background:#0c1424;color:#9aa6bb;font-size:19px;display:flex;align-items:center;padding:0 18px;font-weight:500}
+.view{position:relative;overflow:hidden;background:#fffdf7}
+.win .view{width:1110px;height:624px}
+.view img{position:absolute;left:0;top:0;transform-origin:0 0}
+.wide .win{left:320px;top:170px;width:1280px}
+.wide .win .view{width:1280px;height:720px}
+.wide .cap{left:320px;top:52px;bottom:auto;width:1400px;flex-direction:row;align-items:baseline;gap:28px;justify-content:flex-start}
+.wide .cap h2{font-size:56px}
+.wide .cap .num{margin:0;white-space:nowrap}
+/* teacher + phone */
+.duo .cap{left:100px;top:56px;bottom:auto;width:1720px;flex-direction:row;align-items:baseline;gap:28px}
+.duo .cap h2{font-size:56px}
+.duo .cap .num{margin:0;white-space:nowrap}
+.duo .win{left:100px;top:176px;width:1260px}
+.duo .win .view{width:1260px;height:709px}
+.phone{position:absolute;left:1450px;top:150px;width:370px;height:800px;border-radius:52px;background:#05080f;padding:14px;box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.12)}
+.phone .view{width:342px;height:740px;border-radius:40px}
+.phone::before{content:"";position:absolute;left:50%;top:22px;width:96px;height:26px;margin-left:-48px;border-radius:14px;background:#05080f;z-index:2}
+.lbl{position:absolute;font-size:24px;font-weight:700;color:var(--mute);letter-spacing:.04em}
+.tag{position:absolute;padding:14px 24px;border-radius:14px;background:rgba(12,20,36,.92);border:1.5px solid var(--acid);font-size:27px;font-weight:700;color:var(--acid);box-shadow:0 18px 50px rgba(0,0,0,.5);white-space:nowrap}
+/* rules */
+.rules .head{position:absolute;left:0;right:0;top:150px;text-align:center}
+.rules .head h2{font-size:76px;font-weight:800;letter-spacing:-0.045em}
+.rules .head h2 em{font-style:normal;color:var(--acid)}
+.rules .head p{font-size:32px;color:#c3cbd9;margin-top:18px;font-weight:500}
+.krow{position:absolute;left:160px;right:160px;top:420px;display:grid;grid-template-columns:repeat(5,1fr);gap:22px}
+.key{height:150px;border-radius:22px;padding:24px 28px;background:linear-gradient(160deg,#1f2b45,#141e33);border:1.5px solid rgba(255,227,108,.25);display:flex;flex-direction:column;justify-content:space-between}
+.key b{font-size:20px;color:var(--acid);font-weight:700;letter-spacing:.08em}
+.key strong{font-size:40px;font-weight:800;letter-spacing:-0.03em}
+.key strong::before{content:"◆ ";color:var(--acid);font-size:28px;vertical-align:4px}
+.rrow{position:absolute;left:160px;right:160px;top:610px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.rule{min-height:250px;border-radius:22px;padding:30px 32px;background:var(--paper);color:var(--bg);display:flex;flex-direction:column;gap:16px}
+.rule b{font-size:21px;font-weight:700;color:#7a5a86;letter-spacing:.08em}
+.rule strong{font-size:36px;font-weight:800;letter-spacing:-0.03em}
+.rule span{font-size:25px;font-weight:600;line-height:1.45;color:#3a465c}
+/* outro */
+.outro{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding-bottom:90px}
+.logo{display:flex;align-items:center;gap:30px}
+.logo .lamp{width:84px;height:180px;border-radius:26px;background:#0a1120;border:2px solid rgba(255,255,255,.12);display:flex;flex-direction:column;justify-content:space-around;align-items:center;padding:10px 0}
+.logo .lamp i{display:block;width:44px;height:44px;border-radius:50%}
+.logo .name{font-size:100px;font-weight:900;letter-spacing:-0.03em;text-align:left}
+.logo .name small{display:block;font-size:26px;letter-spacing:.3em;color:var(--acid);font-weight:600;margin-top:4px}
+.outro .line{font-size:50px;font-weight:700;margin-top:64px;letter-spacing:-0.03em}
+.outro .line em{font-style:normal;color:var(--acid)}
+.url{margin-top:52px;font-size:40px;font-weight:800;padding:22px 46px;border-radius:999px;background:var(--acid);color:var(--bg);letter-spacing:0}
+.outro .foot{margin-top:38px;font-size:26px;color:var(--mute);font-weight:500}
+.subs{position:absolute;left:0;right:0;bottom:44px;display:flex;justify-content:center;pointer-events:none}
+.subs span{font-size:40px;font-weight:600;line-height:1.35;color:#fff;background:rgba(6,10,20,.8);padding:14px 34px;border-radius:16px;text-align:center;max-width:1560px;box-shadow:0 10px 40px rgba(0,0,0,.35);letter-spacing:-0.02em}
+.progress{position:absolute;left:0;bottom:0;height:6px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));opacity:.9}
+</style></head>
+<body>
+<div class="stage" id="stage">
+  <div class="grid a" id="grid"></div>
+
+  <section class="scene hero" id="s-hero">
+    <div class="txt">
+      <div class="eyebrow a" data-in="0.3">학교 교실용 3차시 AI 윤리 수업</div>
+      <div class="big a" data-in="0.7">정답 대신,<br><em>판단이 움직이는</em><br>순간을 봅니다</div>
+      <div class="sub a" data-in="1.6">고르고, 바꾸고, 이유를 나누는 실시간 교실 수업</div>
+    </div>
+    <div class="signal a" id="hero-signal"><i><span></span></i><i><span></span></i><i><span></span></i></div>
+  </section>
+
+  <section class="scene" id="s-series">
+    <div class="cap">
+      <div class="num a" data-in="0.2">AI 윤리 판정소</div>
+      <h2 class="a" data-in="0.4">선택 → 대결 →<br><em>판결</em>, 3차시</h2>
+      <p class="a" data-in="0.8">한 차시 45분. 선생님은 수업을 고르고 바로 시작하면 돼요.</p>
+      <div class="chips a" data-in="1.2"><span class="chip">1차시 밸런스 게임쇼</span><span class="chip">2차시 딜레마 배틀</span><span class="chip">3차시 윤리 재판소</span></div>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app</span></div><div class="view"><img id="v-series"></div></div>
+  </section>
+
+  <section class="scene duo" id="s-join">
+    <div class="cap"><div class="num a" data-in="0.1">STEP 1 · 입장</div><h2 class="a" data-in="0.3">수업코드 6자리로 <em>휴대폰 입장</em></h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher · 교사 화면</span></div><div class="view"><img id="v-join-t"></div></div>
+    <div class="phone a" data-win2><div class="view"><img id="v-join-s"></div></div>
+  </section>
+
+  <section class="scene duo" id="s-vote">
+    <div class="cap"><div class="num a" data-in="0.1">STEP 2 · 판정</div><h2 class="a" data-in="0.3">신호등으로 판정하고 <em>이유</em>까지 골라요</h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher · 교사 화면</span></div><div class="view"><img id="v-vote-t"></div></div>
+    <div class="phone a" data-win2><div class="view"><img id="v-vote-s"></div></div>
+  </section>
+
+  <section class="scene wide" id="s-result">
+    <div class="cap"><div class="num a" data-in="0.1">STEP 3 · 결과 공개</div><h2 class="a" data-in="0.3">새 조건이 나오면, <em>판단이 움직여요</em></h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher</span></div><div class="view"><img id="v-result"></div></div>
+    <div class="tag a" id="tag-result" style="left:1270px;top:820px">처음 판정 대비 ▲▼ 변화 표시</div>
+  </section>
+
+  <section class="scene wide" id="s-key">
+    <div class="cap"><div class="num a" data-in="0.1">윤리 열쇠</div><h2 class="a" data-in="0.3">사건마다 <em>판단 기준</em>을 하나씩 얻어요</h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher</span></div><div class="view"><img id="v-key"></div></div>
+  </section>
+
+  <section class="scene wide" id="s-battle">
+    <div class="cap"><div class="num a" data-in="0.1">2차시 · 딜레마 배틀</div><h2 class="a" data-in="0.3">모둠별 근거로 <em>30초 변론</em></h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher?lesson=2</span></div><div class="view"><img id="v-battle"></div></div>
+  </section>
+
+  <section class="scene wide" id="s-court">
+    <div class="cap"><div class="num a" data-in="0.1">3차시 · AI 윤리 재판소</div><h2 class="a" data-in="0.3">모두가 배심원, <em>최종 판결</em>까지</h2></div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>edu-ethics.vercel.app/teacher?lesson=3</span></div><div class="view"><img id="v-court"></div></div>
+  </section>
+
+  <section class="scene rules" id="s-rules">
+    <div class="head"><h2 class="a" data-in="0.1">수업이 끝나면, <em>우리 반 AI 규칙</em>이 남아요</h2><p class="a" data-in="0.4">학생 이름과 투표는 저장하지 않아요. 수업 중에만 집계합니다.</p></div>
+    <div class="krow">
+      <div class="key a" data-in="0.6"><b>KEY 01</b><strong>동의</strong></div>
+      <div class="key a" data-in="0.72"><b>KEY 02</b><strong>정직</strong></div>
+      <div class="key a" data-in="0.84"><b>KEY 03</b><strong>공정</strong></div>
+      <div class="key a" data-in="0.96"><b>KEY 04</b><strong>개인정보</strong></div>
+      <div class="key a" data-in="1.08"><b>KEY 05</b><strong>책임</strong></div>
+    </div>
+    <div class="rrow">
+      <div class="rule a" data-in="1.3"><b>우리 반 규칙 01</b><strong>동의의 범위</strong><span>다른 사람의 얼굴·목소리는 목적과 공개 범위를 먼저 허락받는다.</span></div>
+      <div class="rule a" data-in="1.45"><b>우리 반 규칙 02</b><strong>안전한 비밀</strong><span>위험한 상황은 어른에게 알리되 꼭 필요한 정보만 안전하게 나눈다.</span></div>
+      <div class="rule a" data-in="1.6"><b>우리 반 규칙 03</b><strong>사람의 책임</strong><span>사람의 기회를 정할 때 AI는 참고만 하고 사람이 설명하고 다시 확인한다.</span></div>
+    </div>
+  </section>
+
+  <section class="scene outro" id="s-outro">
+    <div class="logo a" data-in="0.1"><div class="lamp"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i></div><div class="name">AI 윤리 판정소<small>ETHICS JUDGEMENT LAB</small></div></div>
+    <div class="line a" data-in="0.6">정답을 외우는 대신, <em>판단하는 힘</em>을 키워요</div>
+    <div class="url a" data-in="1.1">edu-ethics.vercel.app</div>
+    <div class="foot a" data-in="1.5">설치 없이 브라우저에서 바로 · 교사 화면 + 학생 휴대폰</div>
+  </section>
+  <div class="subs"><span id="sub"></span></div>
+  <div class="progress" id="prog"></div>
+</div>
+<script>
+const FPS = 30;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const lerp = (a, b, t) => a + (b - a) * t;
+// 클립: 프레임 수 n, 프레임 폭 w(px), 화면 폭 css(px)
+const CLIPS = {
+  home:{n:198,w:2400,css:1600}, l1t:{n:1252,w:2400,css:1600}, l1s:{n:1883,w:586,css:390},
+  l2:{n:563,w:2400,css:1600}, l3:{n:686,w:2400,css:1600},
+};
+// view: [x, y, w] (녹화 화면 css 좌표, 높이는 상자 비율로 결정) 시작 → 끝
+const T = (clip, from, len, view) => ({ clip, from, rate: 1, len, view });
+const SCENES = [
+  { id:'s-hero', dur:5.2 },
+  { id:'s-series', dur:5.6, views:[{ img:'v-series', segs:[T('home', 0.8, 5.6, [[0,0,1600],[60,30,1480]])] }] },
+  { id:'s-join', dur:7.0, views:[
+      { img:'v-join-t', segs:[T('l1t', 1.0, 7.0, [[0,0,1600],[560,40,1040]])] },
+      { img:'v-join-s', segs:[T('l1s', 1.0, 7.0, [[0,0,390],[0,0,390]])] } ] },
+  { id:'s-vote', dur:8.0, views:[
+      { img:'v-vote-t', segs:[T('l1t', 11.0, 8.0, [[0,0,1600],[0,30,1320]])] },
+      { img:'v-vote-s', segs:[T('l1s', 11.0, 8.0, [[0,0,390],[0,0,390]])] } ] },
+  { id:'s-result', dur:7.4, views:[{ img:'v-result', segs:[
+      T('l1t', 19.1, 3.8, [[0,0,1600],[0,20,1120]]),
+      T('l1t', 30.0, 3.6, [[0,20,1120],[0,30,1000]]) ] }] },
+  { id:'s-key', dur:4.4, views:[{ img:'v-key', segs:[T('l1t', 37.2, 4.4, [[80,0,1440],[220,70,1160]])] }] },
+  { id:'s-battle', dur:7.6, views:[{ img:'v-battle', segs:[
+      T('l2', 1.2, 2.6, [[0,0,1600],[0,0,1500]]),
+      T('l2', 5.6, 2.6, [[700,280,900],[780,330,820]]),
+      T('l2', 14.0, 2.4, [[0,200,1240],[0,280,1100]]) ] }] },
+  { id:'s-court', dur:8.0, views:[{ img:'v-court', segs:[
+      T('l3', 4.9, 2.8, [[620,260,980],[640,280,940]]),
+      T('l3', 13.4, 2.6, [[0,0,1500],[0,20,1260]]),
+      T('l3', 18.2, 2.6, [[80,0,1440],[200,60,1200]]) ] }] },
+  { id:'s-rules', dur:5.6 },
+  { id:'s-outro', dur:6.2 },
+];
+const XF = 0.6;
+let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur - XF; }
+const TOTAL = acc + XF;
+window.TOTAL = TOTAL;
+function src(clip, i) { const c = CLIPS[clip]; i = Math.max(1, Math.min(c.n, i)); return `frames/${clip}/${String(i).padStart(5,'0')}.jpg`; }
+async function setImg(el, url) {
+  if (el.dataset.src === url) return;
+  el.dataset.src = url; el.src = url;
+  try { await el.decode(); } catch {}
+}
+const SUBS = [
+  [0.5,4.3,'AI로 친구 얼굴을 합성해도 될까요? 정답은 하나가 아니에요.'],
+  [4.8,9.3,'AI 윤리 판정소는 선택 → 대결 → 판결, 3차시로 이어지는 교실 수업이에요.'],
+  [9.9,15.6,'선생님 화면의 수업코드 6자리만 넣으면, 학생들은 휴대폰으로 바로 입장해요.'],
+  [16.1,19.5,'사건을 읽고 괜찮다 · 고민 필요 · 안 된다, 신호등으로 판정하고'],
+  [19.6,23.0,'왜 그렇게 생각했는지 이유도 한 가지 골라요.'],
+  [23.5,26.8,'모두 판정한 뒤에야 우리 반의 선택이 공개돼요.'],
+  [26.9,30.1,'새로운 조건이 나오면 다시 판정하고, 생각이 바뀐 만큼 보여 줘요.'],
+  [30.4,33.8,'사건이 끝날 때마다 동의 · 정직 · 공정 같은 윤리 열쇠를 얻어요.'],
+  [34.2,37.6,'2차시 딜레마 배틀에서는 모둠별로 근거를 세우고,'],
+  [37.7,40.9,'30초 변론으로 상대 모둠의 판정을 바꿔 봐요.'],
+  [41.2,44.6,'3차시 AI 윤리 재판소에서는 모두가 배심원이 되어,'],
+  [44.7,48.2,'피해 · 약속 · 책임을 따져 보고 최종 판결을 내려요.'],
+  [48.6,53.1,'수업이 끝나면 우리 반이 직접 만든 AI 사용 규칙이 남아요.'],
+  [53.6,59.0,'정답을 외우는 대신 판단하는 힘을 키우는 수업, AI 윤리 판정소입니다.'],
+];
+window.SUBS = SUBS;
+function place(img, seg, st) {
+  const c = CLIPS[seg.clip];
+  const box = img.parentElement; const bw = box.clientWidth;
+  const k = ease(clamp(st / seg.len));
+  const [a, b] = seg.view;
+  const vx = lerp(a[0], b[0], k), vy = lerp(a[1], b[1], k), vw = lerp(a[2], b[2], k);
+  const sc = bw / vw;              // css px -> 상자 px
+  const pxScale = c.css / c.w;     // 프레임 px -> css px
+  img.style.width = c.w + 'px';
+  img.style.transform = `translate(${-vx*sc}px, ${-vy*sc}px) scale(${sc*pxScale})`;
+  return setImg(img, src(seg.clip, Math.round((seg.from + st * seg.rate) * FPS) + 1));
+}
+window.render = async function (t) {
+  { const cur = SUBS.find(x => t >= x[0] && t <= x[1]); const el = document.getElementById('sub');
+    if (cur) { el.textContent = cur[2]; const o = Math.min(clamp((t-cur[0])/0.25), clamp((cur[1]-t)/0.25)); el.parentElement.style.opacity = o; el.style.visibility='visible'; }
+    else { el.style.visibility='hidden'; } }
+  document.getElementById('prog').style.width = (t / TOTAL * 100) + '%';
+  document.getElementById('grid').style.transform = `translate(${-(t*6)%80}px, ${-(t*3)%80}px)`;
+  const waits = [];
+  for (const s of SCENES) {
+    const el = document.getElementById(s.id);
+    const lt = t - s.start;
+    if (lt < -0.01 || lt > s.dur + 0.01) { el.style.opacity = 0; el.style.display = 'none'; continue; }
+    el.style.display = '';
+    const fin = s === SCENES[0] ? 1 : clamp(lt / XF), fout = s === SCENES.at(-1) ? clamp((s.dur - lt) / 0.8) : clamp((s.dur - lt) / XF);
+    el.style.opacity = Math.min(fin, fout);
+    el.querySelectorAll('[data-in]').forEach(a => {
+      const p = eout(clamp((lt - parseFloat(a.dataset.in)) / 0.7));
+      a.style.opacity = p; a.style.transform = `translateY(${(1 - p) * 34}px)`;
+    });
+    const win = el.querySelector('[data-win]');
+    if (win) { const p = eout(clamp((lt - 0.15) / 0.9)); win.style.opacity = p; win.style.transform = `translateY(${(1-p)*50}px) scale(${lerp(.96,1,p)})`; }
+    const ph = el.querySelector('[data-win2]');
+    if (ph) { const p = eout(clamp((lt - 0.35) / 0.9)); ph.style.opacity = p; ph.style.transform = `translateX(${(1-p)*120}px)`; }
+    if (s.id === 's-hero') {
+      const sig = document.getElementById('hero-signal');
+      const p = eout(clamp((lt - 0.2) / 1.0));
+      sig.style.opacity = p; sig.style.transform = `translateY(${(1-p)*80}px) rotate(${lerp(4, 0, p)}deg)`;
+      // 신호등이 초록 → 노랑 → 빨강 → 노랑으로 바뀌며 "판단이 움직이는" 느낌
+      const order = [2, 1, 0, 1]; const idx = order[Math.min(3, Math.floor(Math.max(0, lt - 1.0) / 1.0))];
+      sig.querySelectorAll('i span').forEach((sp, i) => { sp.style.opacity = (lt > 1.0 && i === idx) ? 1 : 0; });
+    }
+    if (s.id === 's-result') { const tg = document.getElementById('tag-result'); const p = eout(clamp((lt-3.9)/0.6)); tg.style.opacity = p; tg.style.transform = `translateY(${(1-p)*20}px)`; }
+    if (s.views) for (const v of s.views) {
+      let off = 0, seg = v.segs[0], segStart = 0;
+      for (const g of v.segs) { if (lt >= off) { seg = g; segStart = off; } off += g.len; }
+      waits.push(place(document.getElementById(v.img), seg, clamp(lt - segStart, 0, seg.len)));
+    }
+  }
+  await Promise.all(waits);
+};
+</script>
+</body></html>
