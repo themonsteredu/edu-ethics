@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
+import { DiscussionPanel } from "../components/DiscussionPanel";
 import { SituationPanel } from "../components/SituationPanel";
 import { TeamBattleBoard } from "../components/TeamBattleBoard";
 import { VoteGraph } from "../components/VoteGraph";
 import { getLessonConfig } from "../data/lessons";
 import { connectRoom, hasSupabaseConfig, type RoomConnection, type TransportKind } from "../lib/realtime";
 import {
+  aggregateReasonChoices,
   buildPublicSnapshot,
   createClientId,
   createInitialSession,
@@ -84,6 +86,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
   const previousPhaseVotes = session.phaseIndex > 0
     ? votesForPhase(votes, round.id, round.phases[session.phaseIndex - 1].id)
     : [];
+  const reasonChoiceCounts = snapshot.counts ? aggregateReasonChoices(currentPhaseVotes) : null;
 
   useEffect(() => {
     sessionRef.current = session;
@@ -428,7 +431,7 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
               previousCounts={snapshot.previousCounts}
               responseCount={snapshot.responseCount}
               connectedStudents={connectedStudents}
-              reasonCounts={snapshot.reasonCounts}
+              reasonChoiceCounts={reasonChoiceCounts}
               reasonTags={phase.suggestedReasonTags}
               options={lesson.voteOptions}
               title={lesson.id === 3 ? "배심원단의 판결" : undefined}
@@ -442,46 +445,11 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
               />
             )}
           </div>
-          <div className="teacher-case-area">
-            <SituationPanel round={round} phase={phase} status={session.status} />
-            {session.status === "discussion" && (
-              <div className={`discussion-card ${lesson.id === 2 ? "discussion-card--battle" : ""} ${lesson.id === 3 ? "discussion-card--trial" : ""}`}>
-                <span>{lesson.id === 3 ? "COURTROOM HEARING" : lesson.id === 2 ? "30 SECOND TEAM BATTLE" : "ETHICS DEBATE"}</span>
-                <h2>{round.discussionPrompt}</h2>
-                {lesson.id === 3 && round.trial ? (
-                  <>
-                    <div className="trial-tension">
-                      <strong>{round.trial.tension[0]}</strong>
-                      <i>VS</i>
-                      <strong>{round.trial.tension[1]}</strong>
-                    </div>
-                    <div className="trial-check-grid">
-                      {round.trial.checks.map((check) => (
-                        <article key={check.id}>
-                          <b>{check.label}</b>
-                          <span>{check.question}</span>
-                        </article>
-                      ))}
-                    </div>
-                    <p className="trial-verdict-prompt">판결문 확인 · {round.trial.verdictPrompt}</p>
-                  </>
-                ) : lesson.id === 2 && round.battle ? (
-                  <>
-                    <div className="battle-tension">
-                      <strong>{round.battle.tension[0]}</strong>
-                      <i>VS</i>
-                      <strong>{round.battle.tension[1]}</strong>
-                    </div>
-                    <div className="battle-stance-prompts">
-                      <span className="green"><b>GO</b>{round.battle.stancePrompts.green}</span>
-                      <span className="yellow"><b>WAIT</b>{round.battle.stancePrompts.yellow}</span>
-                      <span className="red"><b>STOP</b>{round.battle.stancePrompts.red}</span>
-                    </div>
-                  </>
-                ) : (
-                  <p>서로 다른 판정을 고른 학생의 이유를 한 명씩 들어보세요.</p>
-                )}
-              </div>
+          <div className={`teacher-case-area ${session.status === "discussion" ? "teacher-case-area--discussion" : ""}`}>
+            {session.status === "discussion" ? (
+              <DiscussionPanel lessonId={lesson.id} round={round} phase={phase} />
+            ) : (
+              <SituationPanel round={round} phase={phase} status={session.status} />
             )}
           </div>
         </section>

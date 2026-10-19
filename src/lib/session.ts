@@ -76,6 +76,16 @@ export function aggregateReasons(votes: VoteSubmission[]): Record<string, number
   }, {});
 }
 
+export function aggregateReasonChoices(votes: VoteSubmission[]): Record<string, VoteCounts> {
+  return votes.reduce<Record<string, VoteCounts>>((counts, vote) => {
+    if (vote.reasonId) {
+      counts[vote.reasonId] ??= emptyCounts();
+      counts[vote.reasonId][vote.choice] += 1;
+    }
+    return counts;
+  }, {});
+}
+
 export function votesForPhase(
   votes: VoteSubmission[],
   roundId: string,

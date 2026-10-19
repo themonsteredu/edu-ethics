@@ -1,7 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { TeacherRoomPage } from "./TeacherRoomPage";
+import { createInitialSession } from "../lib/session";
+import { saveTeacherSession, saveTeacherVotes } from "../lib/storage";
+import type { VoteChoice } from "../types";
 
 vi.mock("../lib/realtime", () => ({
   hasSupabaseConfig: () => false,
@@ -59,11 +62,57 @@ describe("lesson two teacher flow", () => {
     expect(screen.getByRole("heading", { name: "배심원단의 판결" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /세 질문으로 따져보기/ }));
     expect(screen.getByText("COURTROOM HEARING")).toBeInTheDocument();
+    expect(screen.getByText("교장 선생님이 래퍼가 됐다?")).toBeInTheDocument();
+    expect(screen.queryByText(/축제 홍보 모둠이/)).not.toBeInTheDocument();
     expect(screen.getByText("① 피해")).toBeInTheDocument();
     expect(screen.getByText("② 약속")).toBeInTheDocument();
     expect(screen.getByText("③ 책임")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /증거·증언 공개/ }));
     expect(screen.getByText(/축제 무대에서만 보여 주는/)).toBeInTheDocument();
+  });
+});
+
+describe("teacher reason breakdown", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  afterEach(() => cleanup());
+
+  it("lists every reason option while voting and splits them by verdict after closing", () => {
+    const picks: Array<[VoteChoice, string]> = [
+      ["green", "permission"],
+      ["green", "permission"],
+      ["yellow", "permission"],
+      ["red", "own-face"],
+    ];
+    saveTeacherSession({ ...createInitialSession("ABC234", 1), status: "voting", votingEndsAt: Date.now() + 30_000 }, 1);
+    saveTeacherVotes(picks.map(([choice, reasonId], index) => ({
+      studentId: `student-${index}`,
+      roundId: "consent-dance-video",
+      phaseId: "initial",
+      choice,
+      reasonId,
+      submittedAt: index,
+    })), 1);
+
+    render(<MemoryRouter><TeacherRoomPage lessonId={1} /></MemoryRouter>);
+
+    expect(screen.getByText("학생 화면의 이유 선택지")).toBeInTheDocument();
+    for (const label of ["허락받았어요", "친구의 얼굴이에요", "둘만 봤어요", "재미있는 장난이에요"]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(screen.queryByText("친구들이 고른 이유")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /투표 마감/ }));
+
+    expect(screen.getByText("친구들이 고른 이유")).toBeInTheDocument();
+    const permission = screen.getByText("허락받았어요").closest("li")!;
+    expect(within(permission).getByText("3명")).toBeInTheDocument();
+    expect(within(permission).getByRole("img", { name: "괜찮다 2명, 고민 필요 1명, 안 된다 0명" })).toBeInTheDocument();
+    const unused = screen.getByText("둘만 봤어요").closest("li")!;
+    expect(within(unused).getByText("0명")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { countTotal, percentage } from "../lib/session";
+import { countTotal, emptyCounts, percentage } from "../lib/session";
 import type { ReasonTag, VoteCounts, VoteOption } from "../types";
 
 interface VoteGraphProps {
@@ -6,7 +6,7 @@ interface VoteGraphProps {
   previousCounts?: VoteCounts | null;
   responseCount: number;
   connectedStudents: number;
-  reasonCounts?: Record<string, number> | null;
+  reasonChoiceCounts?: Record<string, VoteCounts> | null;
   reasonTags?: ReasonTag[];
   options: VoteOption[];
   title?: string;
@@ -17,7 +17,7 @@ export function VoteGraph({
   previousCounts,
   responseCount,
   connectedStudents,
-  reasonCounts,
+  reasonChoiceCounts,
   reasonTags = [],
   options,
   title = "우리 반의 선택",
@@ -47,17 +47,27 @@ export function VoteGraph({
           {responseCount}명 응답
           {connectedStudents > 0 && ` · ${connectedStudents}명 접속`}
         </strong>
+        {reasonTags.length > 0 && (
+          <div className="reason-preview">
+            <span className="graph-kicker">학생 화면의 이유 선택지</span>
+            <ul>
+              {reasonTags.map((reason) => <li key={reason.id}>{reason.label}</li>)}
+            </ul>
+            <small>투표를 마감하면 이유별로 몇 명이 골랐는지 공개됩니다.</small>
+          </div>
+        )}
       </section>
     );
   }
 
   const total = countTotal(counts);
   const previousTotal = previousCounts ? countTotal(previousCounts) : 0;
-  const topReasons = reasonTags
-    .map((tag) => ({ ...tag, count: reasonCounts?.[tag.id] ?? 0 }))
-    .filter((tag) => tag.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
+  const reasons = reasonTags
+    .map((tag) => {
+      const choiceCounts = reasonChoiceCounts?.[tag.id] ?? emptyCounts();
+      return { ...tag, choiceCounts, count: countTotal(choiceCounts) };
+    })
+    .sort((a, b) => b.count - a.count);
 
   return (
     <section className="vote-graph vote-graph--revealed" aria-live="polite">
@@ -107,18 +117,44 @@ export function VoteGraph({
         </div>
       )}
 
-      {topReasons.length > 0 && (
-        <div className="reason-ranking">
-          <span className="graph-kicker">친구들이 주목한 이유</span>
-          <div className="reason-ranking__list">
-            {topReasons.map((reason, index) => (
-              <span key={reason.id}>
-                <b>{index + 1}</b>
-                {reason.label}
-                <strong>{reason.count}</strong>
-              </span>
-            ))}
+      {reasons.length > 0 && (
+        <div className="reason-breakdown">
+          <div className="reason-breakdown__heading">
+            <span className="graph-kicker">친구들이 고른 이유</span>
+            <div className="reason-legend" aria-hidden="true">
+              {options.map((option) => (
+                <span className={`reason-legend--${option.id}`} key={option.id}>{option.shortLabel}</span>
+              ))}
+            </div>
           </div>
+          <ol className="reason-breakdown__list">
+            {reasons.map((reason, index) => (
+              <li className={reason.count === 0 ? "is-empty" : ""} key={reason.id}>
+                <b>{index + 1}</b>
+                <span className="reason-breakdown__label">{reason.label}</span>
+                <strong className="reason-breakdown__count">{reason.count}명</strong>
+                <div
+                  className="reason-breakdown__track"
+                  role="img"
+                  aria-label={options.map((option) => `${option.shortLabel} ${reason.choiceCounts[option.id]}명`).join(", ")}
+                >
+                  {reason.count > 0 && (
+                    <div className="reason-breakdown__bar" style={{ width: `${(reason.count / Math.max(total, 1)) * 100}%` }}>
+                      {options.filter((option) => reason.choiceCounts[option.id] > 0).map((option) => (
+                        <span
+                          className={`reason-segment reason-segment--${option.id}`}
+                          style={{ flexGrow: reason.choiceCounts[option.id] }}
+                          key={option.id}
+                        >
+                          {reason.choiceCounts[option.id]}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
     </section>

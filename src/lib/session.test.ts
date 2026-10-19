@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  aggregateReasonChoices,
   aggregateReasons,
   aggregateVotes,
   buildPublicSnapshot,
@@ -41,6 +42,12 @@ describe("lesson session helpers", () => {
   it("aggregates signal votes and reasons", () => {
     expect(aggregateVotes(votes)).toEqual({ green: 2, yellow: 1, red: 0 });
     expect(aggregateReasons(votes)).toEqual({ permission: 2 });
+  });
+
+  it("splits each reason by the signal it was chosen with", () => {
+    expect(aggregateReasonChoices(votes)).toEqual({
+      permission: { green: 1, yellow: 1, red: 0 },
+    });
   });
 
   it("replaces a student's vote with a stable key", () => {
