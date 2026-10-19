@@ -995,7 +995,7 @@ blockquote {
 }
 
 .teacher-stage--results {
-  grid-template-columns: minmax(450px, 0.58fr) minmax(360px, 0.42fr);
+  grid-template-columns: minmax(420px, 1fr) minmax(360px, 1fr);
 }
 
 .teacher-stage--discussion {
@@ -1024,6 +1024,28 @@ blockquote {
 .battle-results-column .vote-graph {
   height: 100%;
   border-right: 0;
+}
+
+/* Lesson two shares the column with the team board, so the graph sits tighter. */
+.battle-results-column .vote-graph--revealed {
+  padding-block: clamp(0.75rem, 1.9vh, 1.8rem);
+}
+
+.battle-results-column .graph-heading {
+  margin-bottom: clamp(0.55rem, 1.4vh, 1.4rem);
+}
+
+.battle-results-column .bars {
+  gap: clamp(0.4rem, 1vh, 0.9rem);
+}
+
+.battle-results-column .movement-note {
+  margin-top: clamp(0.5rem, 1.2vh, 1rem);
+}
+
+.battle-results-column .reason-breakdown {
+  margin-top: clamp(0.5rem, 1.2vh, 1.1rem);
+  padding-top: clamp(0.5rem, 1.1vh, 0.9rem);
 }
 
 .vote-graph {
@@ -1406,6 +1428,7 @@ blockquote {
 }
 
 .teacher-case-area {
+  container: case-area / inline-size;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -1458,6 +1481,7 @@ blockquote {
   gap: 1rem;
   color: #929eb0;
   font-size: clamp(0.78rem, 0.9vw, 0.98rem);
+  font-size: clamp(0.8rem, 1.5cqi, 1.1rem);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1478,6 +1502,7 @@ blockquote {
 .case-kicker {
   color: var(--green);
   font-size: clamp(0.9rem, 1.15vw, 1.25rem);
+  font-size: clamp(0.95rem, 2cqi, 1.45rem);
   font-weight: 700;
   letter-spacing: 0.05em;
 }
@@ -1500,8 +1525,18 @@ blockquote {
   color: #edf0f5;
   border-left: 4px solid rgba(255, 255, 255, 0.22);
   font-size: clamp(1.1rem, 1.6vw, 1.8rem);
+  font-size: clamp(1.15rem, 3.5cqi, 2.4rem);
   font-weight: 500;
-  line-height: 1.7;
+  line-height: 1.6;
+}
+
+/* The results column is narrower than the voting one; scale up so the case text stays as large. */
+.teacher-stage--results .case-copy blockquote {
+  font-size: clamp(1.15rem, 4cqi, 2.4rem);
+}
+
+.teacher-stage--results .case-question strong {
+  font-size: clamp(1.15rem, 3.7cqi, 2.3rem);
 }
 
 .situation-panel--condition .case-copy blockquote {
@@ -1519,12 +1554,14 @@ blockquote {
 .case-question span {
   color: #7f8ba0;
   font-size: clamp(0.72rem, 0.85vw, 0.9rem);
+  font-size: clamp(0.8rem, 1.5cqi, 1.05rem);
   font-weight: 700;
   letter-spacing: 0.14em;
 }
 
 .case-question strong {
   font-size: clamp(1.1rem, 1.75vw, 1.85rem);
+  font-size: clamp(1.15rem, 3.3cqi, 2.3rem);
   line-height: 1.5;
 }
 
@@ -1534,6 +1571,7 @@ blockquote {
   gap: 0.5rem;
   color: #9ca6b6;
   font-size: clamp(0.8rem, 0.9vw, 0.98rem);
+  font-size: clamp(0.85rem, 1.6cqi, 1.15rem);
   font-weight: 700;
 }
 
@@ -1821,7 +1859,7 @@ blockquote {
 }
 
 /* Six tiles stop fitting a verdict like "고민 필요" on narrow projector layouts. */
-@container team-board (max-width: 470px) {
+@container team-board (max-width: 500px) {
   .team-battle-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2682,7 +2720,12 @@ blockquote {
   .case-copy blockquote {
     margin-bottom: 1rem;
     font-size: clamp(1rem, 1.45vw, 1.4rem);
-    line-height: 1.6;
+    font-size: clamp(1.1rem, 3.4cqi, 2.2rem);
+    line-height: 1.5;
+  }
+
+  .teacher-stage--results .case-copy blockquote {
+    font-size: clamp(1.1rem, 3.9cqi, 2.2rem);
   }
 
   .case-question {
