@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { Countdown } from "../components/Countdown";
 import { DiscussionPanel } from "../components/DiscussionPanel";
@@ -258,6 +259,51 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
     });
   };
 
+  // Undo the most recent forward step; votes already collected are kept.
+  const previousStep = () => {
+    const lastPhaseIndex = round.phases.length - 1;
+    if (session.status === "briefing") {
+      if (session.introIndex > 0) updateSession({ introIndex: session.introIndex - 1 });
+      else updateSession({ status: "lobby" });
+      return;
+    }
+    if (session.status === "voting") {
+      if (session.phaseIndex > 0) {
+        updateSession({
+          status: lesson.id === 1 ? "results" : "discussion",
+          phaseIndex: session.phaseIndex - 1,
+          votingEndsAt: null,
+        });
+      } else if (session.roundIndex > 0) {
+        const previousRound = lesson.rounds[session.roundIndex - 1];
+        updateSession({
+          status: "key",
+          roundIndex: session.roundIndex - 1,
+          phaseIndex: previousRound.phases.length - 1,
+          votingEndsAt: null,
+        });
+      } else {
+        updateSession({ status: "briefing", introIndex: lesson.introSlides.length - 1, votingEndsAt: null });
+      }
+      return;
+    }
+    if (session.status === "results") {
+      beginVote();
+      return;
+    }
+    if (session.status === "discussion") {
+      updateSession({ status: "results", votingEndsAt: null });
+      return;
+    }
+    if (session.status === "key") {
+      updateSession({ status: "discussion", phaseIndex: lastPhaseIndex, votingEndsAt: null });
+      return;
+    }
+    if (session.status === "complete") {
+      updateSession({ status: "key", votingEndsAt: null });
+    }
+  };
+
   const newRoom = () => {
     if (!window.confirm("현재 수업 결과를 닫고 새 수업코드를 만들까요?")) return;
     clearTeacherRoom(lessonId);
@@ -500,8 +546,18 @@ export function TeacherRoomPage({ lessonId = 1 }: { lessonId?: LessonId }) {
         <button className="teacher-note-toggle" onClick={() => setShowNotes((value) => !value)}>
           {showNotes ? "진행 메모 닫기" : "진행 메모"}
         </button>
-        <div className="teacher-control-actions">{renderControl()}</div>
-        <button className="teacher-new-room" onClick={newRoom}>새 수업</button>
+        <div className="teacher-control-actions">
+          {session.status !== "lobby" && (
+            <button className="teacher-action teacher-action--secondary teacher-action--back" onClick={previousStep} aria-label="이전 단계">
+              <span>←</span> <span className="teacher-action__label">이전 단계</span>
+            </button>
+          )}
+          {renderControl()}
+        </div>
+        <div className="teacher-footer-links">
+          <Link className="teacher-home-link" to="/">⌂ 홈 화면</Link>
+          <button className="teacher-new-room" onClick={newRoom}>새 수업</button>
+        </div>
       </footer>
 
       {showNotes && (

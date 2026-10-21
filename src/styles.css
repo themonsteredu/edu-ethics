@@ -1922,6 +1922,24 @@ blockquote {
   background: var(--ink);
 }
 
+.teacher-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.teacher-home-link {
+  padding: 0.6rem 0.8rem;
+  color: #667187;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.teacher-home-link:hover {
+  color: var(--ink);
+}
+
 .teacher-note-toggle,
 .teacher-new-room {
   padding: 0.6rem 0.8rem;
@@ -2970,6 +2988,30 @@ blockquote {
 
   .teacher-control-actions {
     justify-content: stretch;
+  }
+
+  .teacher-action {
+    white-space: nowrap;
+  }
+
+  .teacher-action--back {
+    padding: 0 1rem;
+  }
+
+  .teacher-action--back .teacher-action__label {
+    display: none;
+  }
+
+  .teacher-footer-links {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+  }
+
+  .teacher-home-link,
+  .teacher-footer-links .teacher-new-room {
+    padding: 0.2rem 0.3rem;
+    white-space: nowrap;
   }
 
   .teacher-control-actions .teacher-action--primary,
