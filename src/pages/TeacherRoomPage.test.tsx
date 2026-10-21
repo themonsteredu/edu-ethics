@@ -46,6 +46,33 @@ describe("lesson two teacher flow", () => {
     expect(screen.getByText(/마지막 글은 자기 말로 다시 써야 한다/)).toBeInTheDocument();
   });
 
+  it("steps back through the flow and links to the home screen", () => {
+    render(<MemoryRouter><TeacherRoomPage lessonId={2} /></MemoryRouter>);
+
+    expect(screen.queryByRole("button", { name: /이전 단계/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /홈 화면/ })).toHaveAttribute("href", "/");
+
+    fireEvent.click(screen.getByRole("button", { name: /오프닝 시작/ }));
+    fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    expect(screen.getByRole("heading", { name: /오늘은 선택보다/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
+    fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
+    fireEvent.click(screen.getByRole("button", { name: /첫 사건 공개/ }));
+    fireEvent.click(screen.getByRole("button", { name: /투표 마감/ }));
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    expect(screen.getByRole("button", { name: /투표 마감/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    expect(screen.getByRole("button", { name: /첫 사건 공개/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    fireEvent.click(screen.getByRole("button", { name: /이전 단계/ }));
+    expect(screen.getByRole("heading", { name: "AI 윤리 딜레마 배틀" })).toBeInTheDocument();
+  });
+
   it("runs the lesson-three court from first verdict to new evidence", () => {
     render(<MemoryRouter><TeacherRoomPage lessonId={3} /></MemoryRouter>);
 
