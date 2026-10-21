@@ -261,14 +261,14 @@ export const lesson1Rounds: EthicsRound[] = [
     id: "ai-leader-score",
     order: 5,
     title: "AI가 나를 ‘리더 42점’으로 찍었다",
-    hook: "축제 탈출방 팀장 탈락! 그런데 AI는 이유를 알려 주지 않는다.",
+    hook: "꿈나래 축제 동아리 부스 팀장 탈락! 그런데 AI는 이유를 알려 주지 않는다.",
     voteQuestion: "이 방식으로 학생의 역할을 정해도 될까요?",
     phases: [
       {
         id: "initial",
         label: "처음 사건",
         situation:
-          "축제 탈출방을 준비하며 AI가 관심 분야 설문을 보고 기획·디자인·진행 역할을 추천했습니다. 선생님은 추천을 보여 준 뒤 학생이 원하는 역할을 다시 선택하게 했습니다.",
+          "꿈나래 축제 동아리 부스를 준비하며 AI가 관심 분야 설문을 보고 기획·디자인·진행 역할을 추천했습니다. 선생님은 추천을 보여 준 뒤 학생이 원하는 역할을 다시 선택하게 했습니다.",
         suggestedReasonTags: [
           { id: "recommend-only", label: "추천만 했어요" },
           { id: "student-choice", label: "학생이 다시 선택해요" },
