@@ -56,20 +56,20 @@ describe("lesson two teacher flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
     fireEvent.click(screen.getByRole("button", { name: /다음 브리핑/ }));
     fireEvent.click(screen.getByRole("button", { name: /첫 사건 공개/ }));
-    expect(screen.getByRole("heading", { name: "교장 선생님이 래퍼가 됐다?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "내 친구가 래퍼가 됐다?" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /투표 마감/ }));
     expect(screen.getByRole("heading", { name: "배심원단의 판결" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /세 질문으로 따져보기/ }));
     expect(screen.getByText("COURTROOM HEARING")).toBeInTheDocument();
-    expect(screen.getByText("교장 선생님이 래퍼가 됐다?")).toBeInTheDocument();
+    expect(screen.getByText("내 친구가 래퍼가 됐다?")).toBeInTheDocument();
     expect(screen.queryByText(/축제 홍보 모둠이/)).not.toBeInTheDocument();
     expect(screen.getByText("① 피해")).toBeInTheDocument();
     expect(screen.getByText("② 약속")).toBeInTheDocument();
     expect(screen.getByText("③ 책임")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /증거·증언 공개/ }));
-    expect(screen.getByText(/축제 무대에서만 보여 주는/)).toBeInTheDocument();
+    expect(screen.getByText(/꿈나래 축제 동아리 부스에서만 보여 주는/)).toBeInTheDocument();
   });
 });
 
