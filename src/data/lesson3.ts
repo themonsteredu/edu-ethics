@@ -25,16 +25,16 @@ export const lesson3Rounds: EthicsRound[] = [
   {
     id: "court-principal-deepfake",
     order: 1,
-    title: "교장 선생님이 래퍼가 됐다?",
+    title: "내 친구가 래퍼가 됐다?",
     hook: "AI 합성이라고 밝혔어도 허락 없이 얼굴과 목소리를 써도 될까?",
     voteQuestion: "이 AI 영상을 계속 공개해도 될까요?",
     phases: [
       {
         id: "initial",
         label: "사건 기록",
-        situation: "축제 홍보 모둠이 교장 선생님의 얼굴과 목소리를 AI로 합성해 랩 영상을 만들었습니다. 영상에는 ‘AI 합성’이라고 표시했고 학생들은 재미있어했지만, 교장 선생님에게는 먼저 묻지 않았습니다.",
+        situation: "꿈나래 축제 동아리 부스 홍보 모둠이 같은 반 친구 서준이의 얼굴과 목소리를 AI로 합성해 랩 영상을 만들었습니다. 영상에는 ‘AI 합성’이라고 표시했고 친구들은 재미있어했지만, 서준이에게는 먼저 묻지 않았습니다.",
         suggestedReasonTags: [
-          { id: "festival-purpose", label: "학교 축제를 위한 영상이에요" },
+          { id: "festival-purpose", label: "꿈나래 축제를 위한 영상이에요" },
           { id: "ai-label", label: "AI 합성이라고 밝혔어요" },
           { id: "no-consent", label: "먼저 허락받지 않았어요" },
           { id: "likeness-right", label: "얼굴과 목소리는 그 사람 것이에요" },
@@ -43,7 +43,7 @@ export const lesson3Rounds: EthicsRound[] = [
       {
         id: "evidence",
         label: "증거·증언 공개",
-        situation: "교장 선생님은 앞서 ‘축제 무대에서만 보여 주는 재미있는 AI 영상’ 제작을 허락했습니다. 하지만 모둠은 SNS 공개까지 허락받지는 않았고, 다른 사람이 영상을 복사해 퍼뜨렸습니다. 모둠은 공개를 멈추고 삭제 요청을 보내겠다고 했습니다.",
+        situation: "서준이는 앞서 ‘꿈나래 축제 동아리 부스에서만 보여 주는 재미있는 AI 영상’ 제작을 허락했습니다. 하지만 모둠은 SNS 공개까지 허락받지는 않았고, 다른 사람이 영상을 복사해 퍼뜨렸습니다. 모둠은 공개를 멈추고 삭제 요청을 보내겠다고 했습니다.",
         suggestedReasonTags: [
           { id: "limited-consent", label: "허락한 범위가 달랐어요" },
           { id: "public-sharing", label: "SNS 공개는 별도 허락이 필요해요" },
@@ -66,7 +66,7 @@ export const lesson3Rounds: EthicsRound[] = [
       tension: ["축제를 재미있게 표현할 자유", "내 얼굴과 목소리를 정할 권리"],
       checks: [
         { id: "harm", label: "① 피해", question: "영상 때문에 불편하거나 피해를 보는 사람은 누구인가요?" },
-        { id: "promise", label: "② 약속", question: "만들기·무대 공개·SNS 공개는 모두 같은 허락일까요?" },
+        { id: "promise", label: "② 약속", question: "만들기·부스 상영·SNS 공개는 모두 같은 허락일까요?" },
         { id: "responsibility", label: "③ 책임", question: "이미 퍼진 영상을 줄이기 위해 누가 무엇을 해야 할까요?" },
       ],
       verdictPrompt: "AI 표시만으로 부족한 이유와 필요한 허락의 범위를 판결문에 넣으세요.",
